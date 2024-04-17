@@ -1,6 +1,0 @@
-f = input("파일 이름을 입력하세요:")
-infile = open(f, "r")
-s = infile.read()
-print("문자", str(len(s)))
-print("단어", str(len(s.split())))
-print("행", str(len(s.split('\n'))))
