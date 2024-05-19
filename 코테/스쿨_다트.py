@@ -1,5 +1,6 @@
 def compute(str):
     score = 0
+<<<<<<< HEAD
 
     if str[1] == 'S' or str[1] == 'D' or str[1] == 'T':
         if str[1] == 'S':
@@ -28,6 +29,27 @@ def compute(str):
                 score *= 2
             if str[3] == '#':
                 score *= -1
+=======
+    num = 0
+    index = 0
+    for i in range(len(str)):
+        if not ord(str[i]) >= ord('0') or not ord(str[i]) <= ord('9'):
+            num = str[:i]
+            index = 0
+            break
+    num=eval(num)
+    for i in range(index, len(str)):
+        if str[i] == 'S':
+            score += num
+        if str[i] == 'D':
+            score += pow(num, 2)
+        if str[i] == 'T':
+            score += pow(num, 3)
+        if str[i] == '*':
+            score *= 2
+        if str[i] == '#':
+            score *= -1
+>>>>>>> 6d642203fae9e9a09c821f6870b8f4ce091c5987
 
     return score
 
@@ -46,8 +68,11 @@ def solution(dartResult):
         if not ord(dartResult[i]) >= ord('0') or not ord(dartResult[i]) <= ord('9'):
             flag = False
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 6d642203fae9e9a09c821f6870b8f4ce091c5987
     ex.append(dartResult[0:numindex[0]])
     ex.append(dartResult[numindex[0]:numindex[1]])
     ex.append(dartResult[numindex[1]:])
@@ -62,6 +87,9 @@ def solution(dartResult):
     answer = score[0] + score[1] + score[2]
 
     return answer
+<<<<<<< HEAD
 
 
 solution('10S2D*3T')
+=======
+>>>>>>> 6d642203fae9e9a09c821f6870b8f4ce091c5987
