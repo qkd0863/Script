@@ -57,6 +57,10 @@ class BlackJack:
         self.LplayerMoney.place(x=500, y=450)
         self.Lstatus = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
         self.Lstatus.place(x=500, y=300)
+        self.LplayerPts = Label(text='', width=10, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.LplayerPts.place(x=300, y=300)
+        self.LdealerPts = Label(text='', width=10, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.LdealerPts.place(x=300, y=100)
 
     def pressedBetX1(self):
         self.betMoney += self.betMoney
@@ -239,23 +243,27 @@ class BlackJack:
             self.LCardDealer[i].configure(image=p)
             self.LCardDealer[i].image = p
 
-        if self.player.value() > 21:
-            self.Lstatus.configure(text='Player Busts')
+
+
+        if self.player.value()[0] > self.dealer.value()[0]:
+            self.Lstatus.configure(text='Player Win')
+            self.playerMoney += self.betMoney * 2
+            PlaySound('sounds/win.wav', SND_FILENAME)
+        elif self.player.value()[0] < self.dealer.value()[0]:
+            self.Lstatus.configure(text='Player Lose')
+            self.playerMoney -= self.betMoney
             PlaySound('sounds/wrong.wav', SND_FILENAME)
-        elif self.dealer.value() > 21:
-            self.Lstatus.configure(text='Dealer Busts')
-            self.playerMoney += self.betMoney * 2
-            PlaySound('sounds/win.wav', SND_FILENAME)
-        elif self.dealer.value() == self.player.value():
-            self.Lstatus.configure(text='Push')
-            self.playerMoney += self.betMoney
-        elif self.dealer.value() < self.player.value():
-            self.Lstatus.configure(text='You Won!!')
-            self.playerMoney += self.betMoney * 2
-            PlaySound('sounds/win.wav', SND_FILENAME)
         else:
-            self.Lstatus.configure(text='Sorry you lost!')
-            PlaySound('sounds/wrong.wav', SND_FILENAME)
+            if self.player.value()[1] > self.dealer.value()[1]:
+                self.Lstatus.configure(text='Player Win')
+                self.playerMoney += self.betMoney * 2
+                PlaySound('sounds/win.wav', SND_FILENAME)
+            else:
+                self.Lstatus.configure(text='Player Lose')
+                self.playerMoney -= self.betMoney
+                PlaySound('sounds/wrong.wav', SND_FILENAME)
+        self.LplayerPts.configure(text=self.player.power + str(self.player.value()[1]))
+        self.LdealerPts.configure(text=self.dealer.power + str(self.dealer.value()[1]))
 
         self.betMoney = 0
         self.LplayerMoney.configure(text='You have $' + str(self.playerMoney))

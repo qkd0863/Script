@@ -8,7 +8,4 @@ class Card:
     def filename(self):
         return self.getsuit()+str(self.value)+'.png'
     def getVaule(self):
-        if self.value>10:
-            return 10
-        else:
-            return self.value
+        return self.value
