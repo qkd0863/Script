@@ -74,6 +74,8 @@ class Configuration:
 
     def scoreSmallStraight(d):
         s = set()
+        for i in range(5):
+            s.add(d[i].getRoll())
         if len(s) >= 4:
             if 1 in s and 2 in s and 3 in s and 4 in s:
                 return 30

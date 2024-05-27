@@ -20,6 +20,7 @@ class Player:
         self.power = ""
         self.top = 0
         self.high = 0
+        self.handhigh = 0
 
     def inHand(self):
         return self.N
@@ -32,8 +33,17 @@ class Player:
         self.N = 0
         self.cards.clear()
 
+    def getHandhigh(self):
+        return self.handhigh
+
     def value(self):
         self.top = self.scoreTop()
+
+        max = 0
+        for i in range(2):
+            if max < self.cards[i].getVaule():
+                max = self.cards[i].getVaule()
+        self.handhigh = max
 
         if self.scoreRoyalStraightFlush():
             return [self.ROYALSTAIGHTFLUSH, self.scoreTop()]
@@ -42,16 +52,16 @@ class Player:
             return [self.BACKSTAIGHTFLUSH, self.scoreTop()]
 
         if self.scoreStraightFlush():
-            return [self.STRAIGHTFLUSH, self.scoreTop()]
+            return [self.STRAIGHTFLUSH, self.high]
 
         if self.scoreFourCard():
-            return [self.FOURCARD, self.scoreTop()]
+            return [self.FOURCARD, self.high]
 
         if self.scoreFullHouse():
-            return [self.FULLHOUSE, self.scoreTop()]
+            return [self.FULLHOUSE, self.high]
 
         if self.scoreFlush():
-            return [self.FLUSH, self.scoreTop()]
+            return [self.FLUSH, self.high]
 
         if self.scoreMountain():
             return [self.MOUNTAIN, self.scoreTop()]
@@ -60,18 +70,18 @@ class Player:
             return [self.BACKSTAIGHT, self.scoreTop()]
 
         if self.scoreStraight():
-            return [self.STRAIGHT, self.scoreTop()]
+            return [self.STRAIGHT, self.high]
 
         if self.scoreTriple():
-            return [self.TRIPLE, self.scoreTop()]
+            return [self.TRIPLE, self.high]
 
         if self.scoreTwoPair():
-            return [self.TWOPAIR, self.scoreTop()]
+            return [self.TWOPAIR, self.high]
 
         if self.scoreOnePair():
-            return [self.ONEPAIR, self.scoreTop()]
+            return [self.ONEPAIR, self.high]
 
-        self.power='TOP'
+        self.power = 'TOP'
         return [self.TOP, self.scoreTop()]
 
     def scoreRoyalStraightFlush(self):
@@ -110,6 +120,7 @@ class Player:
         for i in range(1, 14):
             if index[i] == 4:
                 self.power = "FourCard"
+                self.high = i
                 return True
         return False
 
@@ -117,15 +128,23 @@ class Player:
         index = [0] * 14
         Triple = False
         double = False
+        tripleindex = 0
+        doubleindex = 0
         for i in range(7):
             index[self.cards[i].getVaule()] += 1
         for i in range(1, 14):
             if index[i] == 3:
                 Triple = True
+                tripleindex = i
             if index[i] == 2:
                 double = True
+                doubleindex = i
         if Triple and double:
+            m = max(tripleindex, doubleindex)
+            if tripleindex == 1 or doubleindex == 1:
+                m = 1
             self.power = "FullHouse"
+            self.high = m
             return True
         return False
 
@@ -134,6 +153,7 @@ class Player:
         Spades = 0
         Hearts = 0
         Diamonds = 0
+        max = 0
         for i in range(7):
             if self.cards[i].getsuit() == 'Clubs':
                 Clubs += 1
@@ -143,9 +163,51 @@ class Player:
                 Hearts += 1
             if self.cards[i].getsuit() == 'Diamonds':
                 Diamonds += 1
-        if Clubs == 5 or Spades == 5 or Hearts == 5 or Diamonds == 5:
+
+        if Clubs == 5:
             self.power = "Flush"
+            for i in range(7):
+                if self.cards[i].getsuit() == 'Clubs' and self.cards[i].getVaule() == 1:
+                    max = 1
+                    break
+                if self.cards[i].getsuit() == 'Clubs' and self.cards[i].getVaule() > max:
+                    max = self.cards[i].getVaule()
+            self.high = max
             return True
+
+        if Spades == 5:
+            self.power = "Flush"
+            for i in range(7):
+                if self.cards[i].getsuit() == 'Spades' and self.cards[i].getVaule() == 1:
+                    max = 1
+                    break
+                if self.cards[i].getsuit() == 'Spades' and self.cards[i].getVaule() > max:
+                    max = self.cards[i].getVaule()
+            self.high = max
+            return True
+
+        if Hearts == 5:
+            self.power = "Flush"
+            for i in range(7):
+                if self.cards[i].getsuit() == 'Hearts' and self.cards[i].getVaule() == 1:
+                    max = 1
+                    break
+                if self.cards[i].getsuit() == 'Hearts' and self.cards[i].getVaule() > max:
+                    max = self.cards[i].getVaule()
+            self.high = max
+            return True
+
+        if Diamonds == 5:
+            self.power = "Flush"
+            for i in range(7):
+                if self.cards[i].getsuit() == 'Diamonds' and self.cards[i].getVaule() == 1:
+                    max = 1
+                    break
+                if self.cards[i].getsuit() == 'Diamonds' and self.cards[i].getVaule() > max:
+                    max = self.cards[i].getVaule()
+            self.high = max
+            return True
+
         return False
 
     def scoreMountain(self):
@@ -167,12 +229,15 @@ class Player:
         return False
 
     def scoreStraight(self):
-        card = []
+        index = [0] * 14
         for i in range(7):
-            card.insert(i, self.cards[i].getVaule())
-        if max(card) - min(card) == 4:
-            self.power = "Straight"
-            return True
+            index[self.cards[i].getVaule()] += 1
+        for i in range(2, 10):
+            if index[i] >= 1:
+                if index[i + 1] >= 1 and index[i + 2] >= 1 and index[i + 3] >= 1 and index[i + 4] >= 1:
+                    self.power = "Straight"
+                    self.high = i + 4
+                    return True
         return False
 
     def scoreTriple(self):
@@ -182,19 +247,27 @@ class Player:
         for i in range(1, 14):
             if index[i] == 3:
                 self.power = "Triple"
+                self.high = i
                 return True
         return False
 
     def scoreTwoPair(self):
         index = [0] * 14
         count = 0
+        pair = []
+
         for i in range(7):
             index[self.cards[i].getVaule()] += 1
         for i in range(1, 14):
             if index[i] == 2:
+                pair.append(i)
                 count += 1
         if count >= 2:
             self.power = "TwoPair"
+            if 1 in pair:
+                self.high = 1
+            else:
+                self.high = max(pair)
             return True
         return False
 
@@ -205,12 +278,15 @@ class Player:
         for i in range(1, 14):
             if index[i] == 2:
                 self.power = "OnePair"
+                self.high = i
                 return True
         return False
 
     def scoreTop(self):
         max = 0
         for i in range(7):
+            if self.cards[i].getVaule() == 1:
+                return 1
             if max < self.cards[i].getVaule():
                 max = self.cards[i].getVaule()
         return max
