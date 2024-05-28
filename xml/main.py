@@ -1,6 +1,7 @@
 import requests
 import xml.etree.ElementTree as ET
 import smtplib
+import tkinter.messagebox as msgbox
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -294,14 +295,12 @@ class MainGui():
 
     def InitSendMailButton(self):
         TempFont = font.Font(infoframe, size=12, weight='bold', family='Consolas')
-        SendMailButton = Button(infoframe, font=TempFont, text="도서 정보 메일 발송", command=self.sendmail)
+        SendMailButton = Button(infoframe, font=TempFont, text="도서 정보 메일 발송", command=self.WriteSendMailWindow)
         SendMailButton.place(x=300, y=50)
 
     def sendmail(self):
-        selected_indices = BookListBox.curselection()
-        selected_index = selected_indices[0]
-        bookname = BookListBox.get(selected_index)
 
+        receiver_addr = self.receiver_entry.get()
         html_content = """
         <html>
         <head>
@@ -340,22 +339,37 @@ class MainGui():
         msg.attach(MIMEText(html_content, 'html'))
         msg["Subject"] = "인기 대출 도서 목록"
         msg["From"] = senderAddr
-        msg["To"] = recipientAddr
+        msg["To"] = receiver_addr
 
+        new.destroy()
         try:
             sm.ehlo()
             sm.login("qkd7183@gmail.com", "cgoa ygov ukbu pijb")
-            sm.sendmail(senderAddr, [recipientAddr], msg.as_string())
+            sm.sendmail(senderAddr, receiver_addr, msg.as_string())
             sm.close()
-            print("성공")
+            msgbox.showinfo("성공","메일이 정상적으로 발송되었습니다")
         except smtplib.SMTPAuthenticationError as e:
-            print("로그인 실패")
+            msgbox.showwarning("실패","로그인 실패")
         except smtplib.SMTPRecipientsRefused as e:
-            print("수신 거부")
+            msgbox.showwarning("실패", "수신 거부")
         except smtplib.SMTPException as e:
-            print("이메일 전송 실패")
+            msgbox.showwarning("실패", "이메일 전송 실패")
         except Exception as e:
-            print("알 수 없는 오류가 발생")
+            msgbox.showwarning("실패", "알 수 없는 오류가 발생")
+
+    def WriteSendMailWindow(self):
+        global new
+        new = Toplevel()
+        new.geometry("400x200+200+200")
+        new.title("이메일 전송")
+
+        Label(new, text="수신자 이메일 주소:", font=("Helvetica", 12)).pack(pady=10)
+
+        self.receiver_entry = Entry(new, font=("Helvetica", 12), width=30)
+        self.receiver_entry.pack()
+
+        send_button = Button(new, text="전송", font=("Helvetica", 12), command=self.sendmail)
+        send_button.pack(pady=10)
 
 
 MainGui()
