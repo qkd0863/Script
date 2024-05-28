@@ -47,9 +47,13 @@ class MainGui():
         for item in self.book_root.iter("doc"):
             self.Book_List.add(item.findtext("bookname"))
 
-            self.Book_List_Data.append(
-                item.findtext("bookname") + "\t" + item.findtext("authors") + "\t" + item.findtext(
-                    "publisher") + "\t" + item.findtext("publication_year"))
+            temp = []
+            temp.append(item.findtext("bookname"))
+            temp.append(item.findtext("authors"))
+            temp.append(item.findtext("publisher"))
+            temp.append(item.findtext("publication_year"))
+            temp.append(item.findtext("vol"))
+            self.Book_List_Data.append(temp)
 
         self.SigunData = defaultdict(list)
         for item in self.root.iter("row"):
@@ -88,6 +92,8 @@ class MainGui():
         self.InitLibraryInformationButton()
         self.InitLenderText()
         self.InitBookListBox()
+        self.InitBookInfoLenderText()
+        self.InitBookInfoButton()
 
         window.mainloop()
 
@@ -106,6 +112,9 @@ class MainGui():
         SearchButton.place(x=50, y=50)
 
     def BackButtonAction(self):
+        BookInfoLenderText.config(state=NORMAL)
+        BookInfoLenderText.delete('1.0', END)
+        RenderText.configure(state='disabled')
         self.openInfoFrame()
 
     def InitTopText(self):
@@ -236,6 +245,37 @@ class MainGui():
 
         BookListBox.pack()
         BookListboxScrollbar.config(command=BookListBox.yview)
+
+    def InitBookInfoButton(self):
+        TempFont = font.Font(infoframe, size=12, weight='bold', family='Consolas')
+        BookInfoButton = Button(infoframe, font=TempFont, text="책 정보 출력", command=self.BookInfoButtonAction)
+        BookInfoButton.place(x=150, y=50)
+
+    def BookInfoButtonAction(self):
+        selected_indices = BookListBox.curselection()
+        selected_index = selected_indices[0]
+        bookname = BookListBox.get(selected_index)
+
+        BookInfoLenderText.config(state=NORMAL)
+        BookInfoLenderText.delete('1.0', END)
+        for i in self.Book_List_Data:
+            if str(i[0]) == bookname:
+                BookInfoLenderText.insert(INSERT, bookname + "  ")
+                BookInfoLenderText.insert(INSERT, i[1])
+                BookInfoLenderText.insert(INSERT, "\n")
+                BookInfoLenderText.insert(INSERT, i[2] + "  ")
+                BookInfoLenderText.insert(INSERT, i[3] + "  ")
+                BookInfoLenderText.insert(INSERT, i[4])
+                if (i[4] != ""):
+                    BookInfoLenderText.insert(INSERT, "권\n")
+
+        RenderText.configure(state='disabled')
+
+    def InitBookInfoLenderText(self):
+        global BookInfoLenderText
+
+        BookInfoLenderText = Text(infoframe, width=80, height=20, borderwidth=12, relief='ridge')
+        BookInfoLenderText.place(x=50, y=470)
 
 
 MainGui()
