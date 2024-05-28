@@ -13,7 +13,7 @@ class MainGui:
     def __init__(self):
         self.response = requests.get(self.url, params=self.queryParams)
         self.root = ET.fromstring(self.response.text)
-
+        print(self.response.text)
         window.title("도서관 정보")
         frame = Frame(window)
         frame.pack()

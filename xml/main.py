@@ -11,12 +11,18 @@ window.geometry("1200x800+200+200")
 
 
 class MainGui():
+    book_url = 'http://data4library.kr/api/loanItemSrch'
+    book_service_key = "f1e7e93ee1351c8e15709881906543fb843305921a8d66a87f30050077959fcb"
+    book_queryParams = {'authKey': book_service_key, 'startDt': '2024-01-01', 'endDt': '2024-05-01'}
+    book_response = requests.get(book_url, params=book_queryParams)
+    book_root = ET.fromstring(book_response.text)
     url = 'https://openapi.gg.go.kr/TBGGIBLLBR'
     service_key = "94c80014751c43c3aff04a8290cda503"
     queryParams = {'KEY': service_key, 'Type': 'xml', 'pIndex': '1', 'pSize': '100'}
     response = requests.get(url, params=queryParams)
     root = ET.fromstring(response.text)
     List = set()
+    Book_List = set()
 
     def __init__(self):
 
@@ -36,8 +42,16 @@ class MainGui():
         #    label.grid(row=0, column=i)
 
         row_count = 1
-        self.SigunData = defaultdict(list)
 
+        self.Book_List_Data = []
+        for item in self.book_root.iter("doc"):
+            self.Book_List.add(item.findtext("bookname"))
+
+            self.Book_List_Data.append(
+                item.findtext("bookname") + "\t" + item.findtext("authors") + "\t" + item.findtext(
+                    "publisher") + "\t" + item.findtext("publication_year"))
+
+        self.SigunData = defaultdict(list)
         for item in self.root.iter("row"):
             SIGUN_NM = item.findtext("SIGUN_NM")
             self.List.add(item.findtext("SIGUN_NM"))
@@ -45,18 +59,18 @@ class MainGui():
             TELNO = item.findtext("TELNO")
             HMPG_ADDR = item.findtext("HMPG_ADDR")
             LIBRRY_NM = item.findtext("LIBRRY_NM")
-            RECSROOM_OPEN_TM_INFO= item.findtext("RECSROOM_OPEN_TM_INFO")
-            READROOM_OPEN_TM_INFO= item.findtext("READROOM_OPEN_TM_INFO")
-            RECSROOM_REST_DE_INFO= item.findtext("RECSROOM_REST_DE_INFO")
-            READROOM_REST_DE_INFO= item.findtext("READROOM_REST_DE_INFO")
-            REFINE_WGS84_LAT= item.findtext("REFINE_WGS84_LAT")
-            REFINE_WGS84_LOGT= item.findtext("REFINE_WGS84_LOGT")
+            RECSROOM_OPEN_TM_INFO = item.findtext("RECSROOM_OPEN_TM_INFO")
+            READROOM_OPEN_TM_INFO = item.findtext("READROOM_OPEN_TM_INFO")
+            RECSROOM_REST_DE_INFO = item.findtext("RECSROOM_REST_DE_INFO")
+            READROOM_REST_DE_INFO = item.findtext("READROOM_REST_DE_INFO")
+            REFINE_WGS84_LAT = item.findtext("REFINE_WGS84_LAT")
+            REFINE_WGS84_LOGT = item.findtext("REFINE_WGS84_LOGT")
             self.SigunData[SIGUN_NM].append({
                 "LOCPLC_ADDR": LOCPLC_ADDR,
                 "TELNO": TELNO,
                 "HMPG_ADDR": HMPG_ADDR,
                 "LIBRRY_NM": LIBRRY_NM,
-                "RECSROOM_OPEN_TM_INFO":RECSROOM_OPEN_TM_INFO,
+                "RECSROOM_OPEN_TM_INFO": RECSROOM_OPEN_TM_INFO,
                 "READROOM_OPEN_TM_INFO": READROOM_OPEN_TM_INFO,
                 "RECSROOM_REST_DE_INFO": RECSROOM_REST_DE_INFO,
                 "READROOM_REST_DE_INFO": READROOM_REST_DE_INFO,
@@ -73,6 +87,7 @@ class MainGui():
         self.InitLibraryNameListBox()
         self.InitLibraryInformationButton()
         self.InitLenderText()
+        self.InitBookListBox()
 
         window.mainloop()
 
@@ -117,7 +132,6 @@ class MainGui():
             num += 1
 
         SearchListBox.pack()
-
         ListboxScrollbar.config(command=SearchListBox.yview)
 
     def InitSearchButton(self):
@@ -131,8 +145,14 @@ class MainGui():
         SIGUN_NM = SearchListBox.get(selected_index)
 
         num = 0
+        LibraryNameBox.delete(0, END)
+        List = []
+
         for dictlist in self.SigunData[SIGUN_NM]:
-            LibraryNameBox.insert(num, dictlist["LIBRRY_NM"])
+            List.append(dictlist["LIBRRY_NM"])
+        List.sort()
+        for i in List:
+            LibraryNameBox.insert(num, i)
             num += 1
 
     def InitLibraryInformationButton(self):
@@ -142,12 +162,10 @@ class MainGui():
 
     def InitLenderText(self):
         global RenderText
-        RenderText = Text(infoframe, width=150, height=20, borderwidth=12, relief='ridge')
+        RenderText = Text(infoframe, width=150, height=10, borderwidth=12, relief='ridge')
         RenderText.place(x=50, y=100)
 
-
     def LibraryInformationSearch(self):
-
         selected_indices = LibraryNameBox.curselection()
         if not selected_indices:
             return
@@ -177,9 +195,6 @@ class MainGui():
                     RenderText.insert(INSERT, library['REFINE_WGS84_LAT'])
                     RenderText.insert(INSERT, "     경도:")
                     RenderText.insert(INSERT, library['REFINE_WGS84_LOGT'])
-                    info_label = Label(infoframe,
-                                       text=f"도서관 이름: {library['LIBRRY_NM']}\n주소: {library['LOCPLC_ADDR']}\n전화번호: {library['TELNO']}\n홈페이지: {library['HMPG_ADDR']}")
-                    info_label.pack()
 
         RenderText.configure(state='disabled')
         self.openFrame(infoframe)
@@ -199,6 +214,28 @@ class MainGui():
 
         LibraryNameBox.pack()
         ListboxScrollbar.config(command=LibraryNameBox.yview)
+
+    def InitBookListBox(self):
+        BookListFrame = Frame(infoframe)
+        BookListFrame.place(x=50, y=280)
+
+        global BookListBox
+        BookListboxScrollbar = Scrollbar(BookListFrame)
+        BookListboxScrollbar.pack(side='right', fill='y')
+
+        TempFont = font.Font(BookListFrame, size=15, weight='bold', family='Consolas')
+        BookListBox = Listbox(BookListFrame, font=TempFont, activestyle='none', width=95, height=5, borderwidth=12,
+                              relief='ridge', yscrollcommand=BookListboxScrollbar.set)
+
+        num = 0
+
+        sortList = sorted(self.Book_List)
+        for i in sortList:
+            BookListBox.insert(num, i)
+        num += 1
+
+        BookListBox.pack()
+        BookListboxScrollbar.config(command=BookListBox.yview)
 
 
 MainGui()
