@@ -1,10 +1,24 @@
 import requests
 import xml.etree.ElementTree as ET
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 from collections import defaultdict
 from tkinter import *
 from tkinter import font
 
-# 병원정보 서비스 예제
+# host = "smtp.gmail.com"
+# port = "587"
+
+senderAddr = "qkd7183@gmail.com"
+recipientAddr = "qkd7183@naver.com"
+
+# msg=MIMEBase("multipart","alternative")
+
+
+# HtmlPart=MIMEText(htmlF)
+
 
 window = Tk()
 window.geometry("1200x800+200+200")
@@ -94,6 +108,7 @@ class MainGui():
         self.InitBookListBox()
         self.InitBookInfoLenderText()
         self.InitBookInfoButton()
+        self.InitSendMailButton()
 
         window.mainloop()
 
@@ -276,6 +291,71 @@ class MainGui():
 
         BookInfoLenderText = Text(infoframe, width=80, height=20, borderwidth=12, relief='ridge')
         BookInfoLenderText.place(x=50, y=470)
+
+    def InitSendMailButton(self):
+        TempFont = font.Font(infoframe, size=12, weight='bold', family='Consolas')
+        SendMailButton = Button(infoframe, font=TempFont, text="도서 정보 메일 발송", command=self.sendmail)
+        SendMailButton.place(x=300, y=50)
+
+    def sendmail(self):
+        selected_indices = BookListBox.curselection()
+        selected_index = selected_indices[0]
+        bookname = BookListBox.get(selected_index)
+
+        html_content = """
+        <html>
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body>
+        <h2>인기 대출 도서 목록</h2>
+        <table border="1">
+        <tr>
+            <th>도서명</th>
+            <th>저자</th>
+            <th>출판사</th>
+            <th>출판 연도</th>
+            <th>권수</th>
+        </tr>
+        """
+
+        for book in self.Book_List_Data:
+            html_content += f"""
+            <tr>
+                <td>{book[0]}</td>
+                <td>{book[1]}</td>
+                <td>{book[2]}</td>
+                <td>{book[3]}</td>
+                <td>{book[4]}</td>
+            </tr>
+            """
+        html_content += """
+        </table>
+        </body>
+        </html>
+        """
+
+        sm = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+        msg = MIMEMultipart()
+        msg.attach(MIMEText(html_content, 'html'))
+        msg["Subject"] = "인기 대출 도서 목록"
+        msg["From"] = senderAddr
+        msg["To"] = recipientAddr
+
+        try:
+            sm.ehlo()
+            sm.login("qkd7183@gmail.com", "cgoa ygov ukbu pijb")
+            sm.sendmail(senderAddr, [recipientAddr], msg.as_string())
+            sm.close()
+            print("성공")
+        except smtplib.SMTPAuthenticationError as e:
+            print("로그인 실패")
+        except smtplib.SMTPRecipientsRefused as e:
+            print("수신 거부")
+        except smtplib.SMTPException as e:
+            print("이메일 전송 실패")
+        except Exception as e:
+            print("알 수 없는 오류가 발생")
 
 
 MainGui()
