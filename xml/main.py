@@ -1,9 +1,13 @@
+import urllib
+import urllib.request
+from io import BytesIO
 import requests
 import xml.etree.ElementTree as ET
 import smtplib
 import tkinter.messagebox as msgbox
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from PIL import Image, ImageTk
 
 from collections import defaultdict
 from tkinter import *
@@ -33,11 +37,13 @@ class MainGui():
     book_root = ET.fromstring(book_response.text)
     url = 'https://openapi.gg.go.kr/TBGGIBLLBR'
     service_key = "94c80014751c43c3aff04a8290cda503"
-    queryParams = {'KEY': service_key, 'Type': 'xml', 'pIndex': '1', 'pSize': '100'}
+    queryParams = {'KEY': service_key, 'Type': 'xml', 'pIndex': '1', 'pSize': '1000'}
     response = requests.get(url, params=queryParams)
     root = ET.fromstring(response.text)
     List = set()
     Book_List = set()
+
+
 
     def __init__(self):
 
@@ -56,7 +62,8 @@ class MainGui():
         #    label = Label(frame, text=col_name, font=("Helvetica", 14, "bold"))
         #    label.grid(row=0, column=i)
 
-        row_count = 1
+
+
 
         self.Book_List_Data = []
         for item in self.book_root.iter("doc"):
@@ -68,6 +75,7 @@ class MainGui():
             temp.append(item.findtext("publisher"))
             temp.append(item.findtext("publication_year"))
             temp.append(item.findtext("vol"))
+            temp.append(item.findtext("bookImageURL"))
             self.Book_List_Data.append(temp)
 
         self.SigunData = defaultdict(list)
@@ -97,8 +105,6 @@ class MainGui():
                 "REFINE_WGS84_LOGT": REFINE_WGS84_LOGT
             })
 
-            row_count += 1
-
         self.InitBackButton()
         self.InitTopText()
         self.InitSearchButton()
@@ -110,7 +116,7 @@ class MainGui():
         self.InitBookInfoLenderText()
         self.InitBookInfoButton()
         self.InitSendMailButton()
-
+        self.InitBookImageLabel()
         window.mainloop()
 
     def openFrame(self, frame):
@@ -130,11 +136,15 @@ class MainGui():
     def BackButtonAction(self):
         BookInfoLenderText.config(state=NORMAL)
         BookInfoLenderText.delete('1.0', END)
-        RenderText.configure(state='disabled')
+        BookInfoLenderText.configure(state='disabled')
+
+        RenderText.config(state=NORMAL)
+        RenderText.delete('1.0', END)
+
         self.openInfoFrame()
 
     def InitTopText(self):
-        self.TopText = Label(mainframe, text="경기도 도서관 정보 검색")
+        self.TopText = Label(mainframe, text="경기도 공공도서관 정보 검색")
         self.TopText.place(x=20, y=0)
 
     def InitSearchListBox(self):
@@ -285,7 +295,24 @@ class MainGui():
                 if (i[4] != ""):
                     BookInfoLenderText.insert(INSERT, "권\n")
 
+
+                url = i[5]
+
+                if hasattr(self, 'book_image_label'):
+                    self.book_image_label.destroy()
+
+                response = requests.get(url)
+                image_data = response.content
+                im = ImageTk.PhotoImage(data=image_data)
+
+                self.book_image_label = Label(infoframe, image=im)
+                self.book_image_label.image = im  # keep a reference
+                self.book_image_label.place(x=800, y=470)
+
         RenderText.configure(state='disabled')
+
+
+
 
     def InitBookInfoLenderText(self):
         global BookInfoLenderText
@@ -293,13 +320,15 @@ class MainGui():
         BookInfoLenderText = Text(infoframe, width=80, height=20, borderwidth=12, relief='ridge')
         BookInfoLenderText.place(x=50, y=470)
 
+    def InitBookImageLabel(self):
+        pass
+
     def InitSendMailButton(self):
         TempFont = font.Font(infoframe, size=12, weight='bold', family='Consolas')
         SendMailButton = Button(infoframe, font=TempFont, text="도서 정보 메일 발송", command=self.WriteSendMailWindow)
         SendMailButton.place(x=300, y=50)
 
     def sendmail(self):
-
         receiver_addr = self.receiver_entry.get()
         html_content = """
         <html>
@@ -347,9 +376,9 @@ class MainGui():
             sm.login("qkd7183@gmail.com", "cgoa ygov ukbu pijb")
             sm.sendmail(senderAddr, receiver_addr, msg.as_string())
             sm.close()
-            msgbox.showinfo("성공","메일이 정상적으로 발송되었습니다")
+            msgbox.showinfo("성공", "메일이 정상적으로 발송되었습니다")
         except smtplib.SMTPAuthenticationError as e:
-            msgbox.showwarning("실패","로그인 실패")
+            msgbox.showwarning("실패", "로그인 실패")
         except smtplib.SMTPRecipientsRefused as e:
             msgbox.showwarning("실패", "수신 거부")
         except smtplib.SMTPException as e:
@@ -370,6 +399,20 @@ class MainGui():
 
         send_button = Button(new, text="전송", font=("Helvetica", 12), command=self.sendmail)
         send_button.pack(pady=10)
+
+    def LoadBookListData(self):
+
+        for item in self.book_root.iter("doc"):
+            self.Book_List.add(item.findtext("bookname"))
+
+            temp = []
+            temp.append(item.findtext("bookname"))
+            temp.append(item.findtext("authors"))
+            temp.append(item.findtext("publisher"))
+            temp.append(item.findtext("publication_year"))
+            temp.append(item.findtext("vol"))
+            temp.append(item.findtext("bookImageURL"))
+            self.Book_List_Data.append(temp)
 
 
 MainGui()
