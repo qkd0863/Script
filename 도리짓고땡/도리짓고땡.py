@@ -296,7 +296,7 @@ class BlackJack:
         self.LplayerPts.configure(text=str(self.player.value()[1]))
         self.LdealerPts.configure(text=str(self.dealer.value()[1]))
 
-        self.betMoney = 10
+        self.betMoney = 0
         self.LplayerMoney.configure(text=str(self.playerMoney) + "만원")
         self.LbetMoney_P1.configure(text='$' + str(self.betMoney))
 
