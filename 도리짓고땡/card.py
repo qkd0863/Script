@@ -1,11 +1,16 @@
 class Card:
-    def __init__(self,number):
-        self.x=number//13
-        self.value=number%13+1
+    def __init__(self, number):
+        self.x = number // 4
+        self.value = number % 4 + 1
+
     def getsuit(self):
-        suits=['Clubs','Spades','Hearts','Diamonds']
+        suits = []
+        for i in range(1, 13):
+            suits.append(str(i))
         return suits[self.x]
+
     def filename(self):
-        return self.getsuit()+str(self.value)+'.png'
+        return self.getsuit() + "." + str(self.value) + '.gif'
+
     def getVaule(self):
         return self.value
