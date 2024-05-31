@@ -110,7 +110,7 @@ class BlackJack:
     def firstdeal(self):
         self.player.reset()
         self.dealer.reset()
-        self.cardDeck = [i for i in range(48)]
+        self.cardDeck = [i for i in range(40)]
         random.shuffle(self.cardDeck)
         self.deckN = 0
 

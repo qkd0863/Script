@@ -5,7 +5,7 @@ class Card:
 
     def getsuit(self):
         suits = []
-        for i in range(1, 13):
+        for i in range(1, 11):
             suits.append(str(i))
         return suits[self.x]
 
