@@ -6,11 +6,11 @@ class Card:
     def getsuit(self):
         suits = []
         for i in range(1, 11):
-            suits.append(str(i))
+            suits.append(i)
         return suits[self.x]
 
     def filename(self):
-        return self.getsuit() + "." + str(self.value) + '.gif'
+        return str(self.getsuit()) + "." + str(self.value) + '.gif'
 
     def getVaule(self):
         return self.value

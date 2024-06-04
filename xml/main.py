@@ -141,6 +141,9 @@ class MainGui():
         RenderText.config(state=NORMAL)
         RenderText.delete('1.0', END)
 
+        if hasattr(self, 'book_image_label'):
+            self.book_image_label.destroy()
+
         self.openInfoFrame()
 
     def InitTopText(self):

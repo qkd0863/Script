@@ -15,6 +15,7 @@ class Player:
         self.name = name
         self.cards = []
         self.N = 0
+        self.betMoney = 0
 
     def inHand(self):
         return self.N
@@ -28,64 +29,89 @@ class Player:
         self.cards.clear()
 
     def value(self):
-        if (self.maid()):
-            pass
-        else:
-            return [self.nomaid, 0]
+        if (not self.maid()):
+            return [self.nomaid, [0, 0]]
 
+        num = self.scorekkeus()
         if (self.scoreSampal()):
-            return [self.sampal, self.scoreTop()]
+            return [self.sampal, num]
         if (self.scoreGwangTTaeng()):
-            return [self.gwangttaeng, self.scoreTop()]
+            return [self.gwangttaeng, num]
         if (self.scoreTTaeng()):
-            return [self.ttaeng, self.scoreTop()]
-        if (self.scorekkeus()):
-            return [self.kkeus, self.scoreTop()]
-        if (self.scoreMangTong()):
-            return [self.Mangtong, self.scoreTop()]
+            return [self.ttaeng, num]
+
+        if num[0] > 0:
+            return [self.kkeus, num]
+        else:
+            return [self.Mangtong, num]
 
     def scoreSampal(self):
-        combarr = self.getmaid()
-        arr = []
+        val_arr = self.getmaid()
+        sam = False
+        pal = False
         for i in range(5):
-            arr.append(self.cards[i].getsuit())
+            if self.cards[i].getVaule() == 1 and self.cards[i].getsuit() == 3:
+                sam = True
+            if self.cards[i].getVaule() == 1 and self.cards[i].getsuit() == 8:
+                pal = True
 
-        for i in range(len(combarr)):
-            temparr = arr
-            for j in range(3):
-                temparr.remove(str(combarr[i][j]))
+        if (not sam or not pal):
+            return False
 
-            if '3' in temparr or '8' in temparr:
-                sam = False
-                pal = False
-                for k in range(5):
-                    if (self.cards[k].getsuit() == '3' and self.cards[k].getVaule() == 1):
-                        sam = True
-                    if (self.cards[k].getsuit() == '8' and self.cards[k].getVaule() == 1):
-                        pal = True
-                if (sam and pal):
-                    return True
+        for i in range(len(val_arr)):
+            if 3 in val_arr[i] and 8 in val_arr[i]:
+                return True
         return False
 
     def scoreGwangTTaeng(self):
-        pass
+        val_arr = self.getmaid()
+
+        ill = False
+        sam = False
+        pal = False
+        for i in range(5):
+            if self.cards[i].getVaule() == 1 and self.cards[i].getsuit() == 1:
+                ill = True
+            if self.cards[i].getVaule() == 1 and self.cards[i].getsuit() == 3:
+                sam = True
+            if self.cards[i].getVaule() == 1 and self.cards[i].getsuit() == 8:
+                pal = True
+
+        if not ill:
+            return False
+
+        if (not sam and not pal):
+            return False
+
+        for i in range(len(val_arr)):
+            if 1 in val_arr[i] and 3 in val_arr[i]:
+                return True
+            if 1 in val_arr[i] and 8 in val_arr[i]:
+                return True
+        return False
 
     def scoreTTaeng(self):
-        pass
+        val_arr = self.getmaid()
+        for i in range(len(val_arr)):
+            if val_arr[i][0] == val_arr[i][1]:
+                return True
+        return False
 
     def scorekkeus(self):
-        pass
+        val_arr = self.getmaid()
+        sum = [0, [0, 0]]
+        for i in range(len(val_arr)):
+            if (sum[0] <= (val_arr[i][0] + val_arr[i][1]) % 10):
+                sum[0] = (val_arr[i][0] + val_arr[i][1]) % 10
+                sum[1][0] = val_arr[i][0]
+                sum[1][1] = val_arr[i][1]
 
-    def scoreMangTong(self):
-        pass
-
-    def scoreTop(self):
-        pass
+        return sum
 
     def maid(self):
         arr = []
         for i in range(5):
-            arr.append(int(self.cards[i].getsuit()))
+            arr.append(self.cards[i].getsuit())
         nCr = list(itertools.combinations(arr, 3))
         for i in range(len(nCr)):
             sum = 0
@@ -99,7 +125,7 @@ class Player:
         arr = []
         combarr = []
         for i in range(5):
-            arr.append(int(self.cards[i].getsuit()))
+            arr.append(self.cards[i].getsuit())
         nCr = list(itertools.combinations(arr, 3))
         for i in range(len(nCr)):
             sum = 0
@@ -107,4 +133,14 @@ class Player:
                 sum += nCr[i][j]
             if (sum == 10 or sum == 20):
                 combarr.append(nCr[i])
-        return combarr
+
+        val_arr = []
+
+        for i in range(len(combarr)):
+            temparr = arr[:]
+            for j in range(3):
+                temparr.remove(combarr[i][j])
+
+            val_arr.append(temparr)
+
+        return val_arr

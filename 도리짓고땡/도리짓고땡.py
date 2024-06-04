@@ -12,7 +12,7 @@ class BlackJack:
         self.window.title = ("도리짓고 땡")
         self.window.geometry("800x600")
         self.window.configure(bg='green')
-        self.fontstyle = font.Font(self.window, size=24, weight='bold', family='Consolas')
+        self.fontstyle = font.Font(self.window, size=16, weight='bold', family='Consolas')
         self.fontstyle2 = font.Font(self.window, size=16, weight='bold', family='Consolas')
         self.setUpBotton()
         self.setUpLabel()
@@ -79,31 +79,84 @@ class BlackJack:
 
         self.Lstatus = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
         self.Lstatus.place(x=500, y=300)
-        self.LplayerPts = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
-        self.LplayerPts.place(x=300, y=400)
-        self.LdealerPts = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
-        self.LdealerPts.place(x=300, y=100)
+        self.LplayerPts = Label(text='', width=10, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.LplayerPts.place(x=0, y=250)
+        self.Lplayer2Pts = Label(text='', width=10, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.Lplayer2Pts.place(x=200, y=250)
+        self.Lplayer3Pts = Label(text='', width=10, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.Lplayer3Pts.place(x=400, y=250)
+        self.LdealerPts = Label(text='', width=10, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.LdealerPts.place(x=400, y=100)
+
+        self.LplayerNum = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.LplayerNum.place(x=0, y=300)
+        self.Lplayer2Num = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.Lplayer2Num.place(x=100, y=300)
+        self.Lplayer3Num = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.Lplayer3Num.place(x=200, y=300)
+        self.LdealerNum = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.LdealerNum.place(x=300, y=150)
+
+        self.LplayerCard = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.LplayerCard.place(x=-25, y=310)
+        self.Lplayer2Card = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.Lplayer2Card.place(x=160, y=310)
+        self.Lplayer3Card = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.Lplayer3Card.place(x=340, y=310)
+        self.LdealerCard = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.LdealerCard.place(x=10, y=170)
+
+        self.LplayerWin = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.LplayerWin.place(x=-25, y=285)
+        self.Lplayer2Win = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.Lplayer2Win.place(x=160, y=285)
+        self.Lplayer3Win = Label(text='', width=15, height=1, font=self.fontstyle, bg='green', fg='white')
+        self.Lplayer3Win.place(x=340, y=285)
 
     def pressedBet5(self, player):
 
-        self.betMoney += 5
-        if self.betMoney <= self.playerMoney:
-            self.LbetMoney_P1.configure(text=str(self.betMoney) + "만")
-            self.LplayerMoney.configure(text=str(self.playerMoney - self.betMoney) + "만원")
+        player.betMoney += 5
+        if player.betMoney <= self.playerMoney:
             self.Deal['state'] = 'active'
             self.Deal['bg'] = 'white'
             PlaySound('sounds/chip.wav', SND_FILENAME)
+
+            if (player.playernum == 1):
+                self.LbetMoney_P1.configure(text=str(player.betMoney) + "만")
+                self.LplayerMoney.configure(text=str(self.playerMoney - self.sumbetMoney()) + "만원")
+                return
+            if (player.playernum == 2):
+                self.LbetMoney_P2.configure(text=str(player.betMoney) + "만")
+                self.LplayerMoney.configure(text=str(self.playerMoney - self.sumbetMoney()) + "만원")
+                return
+            if (player.playernum == 3):
+                self.LbetMoney_P3.configure(text=str(player.betMoney) + "만")
+                self.LplayerMoney.configure(text=str(self.playerMoney - self.sumbetMoney()) + "만원")
+                return
+
         else:
             self.betMoney -= 5
 
     def pressedBet1(self, player):
-        self.betMoney += 1
-        if self.betMoney <= self.playerMoney:
-            self.LbetMoney_P1.configure(text=str(self.betMoney) + '만')
-            self.LplayerMoney.configure(text=str(self.playerMoney - self.betMoney) + "만원")
+        player.betMoney += 1
+        if player.betMoney <= self.playerMoney:
             self.Deal['state'] = 'active'
             self.Deal['bg'] = 'white'
             PlaySound('sounds/chip.wav', SND_FILENAME)
+
+            if (player.playernum == 1):
+                self.LbetMoney_P1.configure(text=str(player.betMoney) + "만")
+                self.LplayerMoney.configure(text=str(self.playerMoney - self.sumbetMoney()) + "만원")
+                return
+            if (player.playernum == 2):
+                self.LbetMoney_P2.configure(text=str(player.betMoney) + "만")
+                self.LplayerMoney.configure(text=str(self.playerMoney - self.sumbetMoney()) + "만원")
+                return
+            if (player.playernum == 3):
+                self.LbetMoney_P3.configure(text=str(player.betMoney) + "만")
+                self.LplayerMoney.configure(text=str(self.playerMoney - self.sumbetMoney()) + "만원")
+                return
+
         else:
             self.betMoney -= 1
 
@@ -121,6 +174,8 @@ class BlackJack:
 
         self.nCardPlayer = 1
         self.nCardDealer = 1
+        self.activeBet()
+        self.disalbedDeal()
 
     def seconddeal(self):
         for i in range(3):
@@ -130,7 +185,7 @@ class BlackJack:
             p = PhotoImage(file='GodoriCards/cardback.gif')
             self.LCardDealer.append(Label(self.window, image=p))
             self.LCardDealer[self.dealer.inHand() - 1].image = p
-            self.LCardDealer[self.dealer.inHand() - 1].place(x=50 + (i + 1) * 20, y=50)
+            self.LCardDealer[self.dealer.inHand() - 1].place(x=50 + (i + 1) * 25, y=50)
 
         for i in range(3):
             newCard = Card(self.cardDeck[self.deckN])
@@ -140,7 +195,7 @@ class BlackJack:
             self.player.LCardPlayer.append(Label(self.window, image=p))
             self.player.LCardPlayer[self.player.inHand() - 1].image = p
             self.player.LCardPlayer[self.player.inHand() - 1].place(
-                x=20 + (i + 1) * 20 + (self.player.playernum - 1) * 180, y=350)
+                x=20 + (i + 1) * 25 + (self.player.playernum - 1) * 180, y=350)
 
         for i in range(3):
             newCard = Card(self.cardDeck[self.deckN])
@@ -151,7 +206,7 @@ class BlackJack:
 
             self.player2.LCardPlayer[self.player2.inHand() - 1].image = p
             self.player2.LCardPlayer[self.player2.inHand() - 1].place(
-                x=20 + (i + 1) * 20 + (self.player2.playernum - 1) * 180, y=350)
+                x=20 + (i + 1) * 25 + (self.player2.playernum - 1) * 180, y=350)
 
         for i in range(3):
             newCard = Card(self.cardDeck[self.deckN])
@@ -162,9 +217,10 @@ class BlackJack:
 
             self.player3.LCardPlayer[self.player3.inHand() - 1].image = p
             self.player3.LCardPlayer[self.player3.inHand() - 1].place(
-                x=20 + (i + 1) * 20 + (self.player3.playernum - 1) * 180, y=350)
+                x=20 + (i + 1) * 25 + (self.player3.playernum - 1) * 180, y=350)
 
-        PlaySound('sounds/cardFlip1.wav', SND_FILENAME)
+        self.activeBet()
+        self.disalbedDeal()
 
     def lastdeal(self):
         newCard = Card(self.cardDeck[self.deckN])
@@ -173,7 +229,7 @@ class BlackJack:
         p = PhotoImage(file='GodoriCards/' + newCard.filename())
         self.player.LCardPlayer.append(Label(self.window, image=p))
         self.player.LCardPlayer[self.player.inHand() - 1].image = p
-        self.player.LCardPlayer[self.player.inHand() - 1].place(x=20 + 4 * 20 + (self.player.playernum - 1) * 180,
+        self.player.LCardPlayer[self.player.inHand() - 1].place(x=20 + 4 * 25 + (self.player.playernum - 1) * 180,
                                                                 y=350)
         newCard = Card(self.cardDeck[self.deckN])
         self.deckN += 1
@@ -181,7 +237,7 @@ class BlackJack:
         p = PhotoImage(file='GodoriCards/' + newCard.filename())
         self.player2.LCardPlayer.append(Label(self.window, image=p))
         self.player2.LCardPlayer[self.player2.inHand() - 1].image = p
-        self.player2.LCardPlayer[self.player2.inHand() - 1].place(x=20 + 4 * 20 + (self.player2.playernum - 1) * 180,
+        self.player2.LCardPlayer[self.player2.inHand() - 1].place(x=20 + 4 * 25 + (self.player2.playernum - 1) * 180,
                                                                   y=350)
 
         newCard = Card(self.cardDeck[self.deckN])
@@ -190,7 +246,7 @@ class BlackJack:
         p = PhotoImage(file='GodoriCards/' + newCard.filename())
         self.player3.LCardPlayer.append(Label(self.window, image=p))
         self.player3.LCardPlayer[self.player3.inHand() - 1].image = p
-        self.player3.LCardPlayer[self.player3.inHand() - 1].place(x=20 + 4 * 20 + (self.player3.playernum - 1) * 180,
+        self.player3.LCardPlayer[self.player3.inHand() - 1].place(x=20 + 4 * 25 + (self.player3.playernum - 1) * 180,
                                                                   y=350)
 
         newCard = Card(self.cardDeck[self.deckN])
@@ -199,11 +255,14 @@ class BlackJack:
         p = PhotoImage(file='GodoriCards/' + newCard.filename())
         self.LCardDealer.append(Label(self.window, image=p))
         self.LCardDealer[self.dealer.inHand() - 1].image = p
-        self.LCardDealer[self.dealer.inHand() - 1].place(x=50 + 4 * 20, y=50)
+        self.LCardDealer[self.dealer.inHand() - 1].place(x=50 + 4 * 25, y=50)
 
         self.checkWiner()
+        self.disabledBet()
+        self.disalbedDeal()
 
     def deal(self):
+        PlaySound('sounds/cardFlip1.wav', SND_FILENAME)
         if self.turn == 0:
             self.firstdeal()
         if self.turn == 1:
@@ -211,15 +270,9 @@ class BlackJack:
         if self.turn == 2:
             self.lastdeal()
         self.turn += 1
-
-        self.Bet1_P1['state'] = 'active'
-        self.Bet1_P1['bg'] = 'white'
-        self.Bet5_P1['state'] = 'active'
-        self.Bet5_P1['bg'] = 'white'
-        self.Deal['state'] = 'disabled'
-        self.Deal['bg'] = 'gray'
-        self.Deal['state'] = 'disabled'
-        self.Deal['bg'] = 'gray'
+        self.playerCardConfigure(self.player)
+        self.playerCardConfigure(self.player2)
+        self.playerCardConfigure(self.player3)
 
     def hitPlayer(self, n, player):
         newCard = Card(self.cardDeck[self.deckN])
@@ -229,7 +282,6 @@ class BlackJack:
         player.LCardPlayer.append(Label(self.window, image=p))
         player.LCardPlayer[player.inHand() - 1].image = p
         player.LCardPlayer[player.inHand() - 1].place(x=20 + n * 75 + (player.playernum - 1) * 180, y=350)
-        PlaySound('sounds/cardFlip1.wav', SND_FILENAME)
 
     def hitDealer(self, n):
         newCard = Card(self.cardDeck[self.deckN])
@@ -241,7 +293,6 @@ class BlackJack:
         self.LCardDealer[self.dealer.inHand() - 1].image = p
         self.LCardDealer[self.dealer.inHand() - 1].place(x=250 + n * 30, y=50)
         # self.LdealerPts.configure(text=str(self.player.value()))
-        PlaySound('sounds/cardFlip1.wav', SND_FILENAME)
 
     def hitDealerDown(self, n):
         newCard = Card(self.cardDeck[self.deckN])
@@ -252,13 +303,14 @@ class BlackJack:
         self.LCardDealer[self.dealer.inHand() - 1].image = p
         self.LCardDealer[self.dealer.inHand() - 1].place(x=50 + n * 75, y=50)
         # self.LdealerPts.configure(text=str(self.player.value()))
-        PlaySound('sounds/cardFlip1.wav', SND_FILENAME)
 
     def pressedDeal(self):
         self.deal()
 
     def pressedAgain(self):
         self.player.reset()
+        self.player2.reset()
+        self.player3.reset()
         self.dealer.reset()
         self.nCardDealer = 0
         self.nCardPlayer = 0
@@ -273,15 +325,37 @@ class BlackJack:
         self.deckN = 0
         self.turn = 0
         self.LplayerPts.configure(text='')
+        self.Lplayer2Pts.configure(text='')
+        self.Lplayer3Pts.configure(text='')
         self.LdealerPts.configure(text='')
 
-        self.Bet1_P1['state'] = 'active'
-        self.Bet1_P1['bg'] = 'white'
-        self.Bet5_P1['state'] = 'active'
-        self.Bet5_P1['bg'] = 'white'
+        self.LplayerCard.configure(text="")
+        self.Lplayer2Card.configure(text="")
+        self.Lplayer3Card.configure(text="")
+        self.LdealerCard.configure(text="")
 
-        self.Deal['state'] = 'disabled'
-        self.Deal['bg'] = 'gray'
+
+
+        self.LplayerWin.configure(text="")
+        self.Lplayer2Win.configure(text="")
+        self.Lplayer3Win.configure(text="")
+
+        for label in self.player.LCardPlayer:
+            label.destroy()
+        for label in self.player2.LCardPlayer:
+            label.destroy()
+        for label in self.player3.LCardPlayer:
+            label.destroy()
+        for label in self.dealer.LCardPlayer:
+            label.destroy()
+
+        self.player.LCardPlayer.clear()
+        self.player2.LCardPlayer.clear()
+        self.player3.LCardPlayer.clear()
+        self.dealer.LCardPlayer.clear()
+
+        self.activeBet()
+        self.disalbedDeal()
         self.Again['state'] = 'disabled'
         self.Again['bg'] = 'gray'
 
@@ -293,21 +367,168 @@ class BlackJack:
             self.LCardDealer[i].configure(image=p)
             self.LCardDealer[i].image = p
 
-        self.LplayerPts.configure(text=str(self.player.value()[1]))
-        self.LdealerPts.configure(text=str(self.dealer.value()[1]))
+        if (self.judge(self.player, self.dealer)):
+            self.LplayerWin.configure(text="승")
+        else:
+            self.LplayerWin.configure(text="패")
 
-        self.betMoney = 0
+        if (self.judge(self.player2, self.dealer)):
+            self.Lplayer2Win.configure(text="승")
+        else:
+            self.Lplayer2Win.configure(text="패")
+
+        if (self.judge(self.player3, self.dealer)):
+            self.Lplayer3Win.configure(text="승")
+        else:
+            self.Lplayer3Win.configure(text="패")
+
+        self.dealerCardConfigure(self.dealer)
+        self.playerPtsConfigure(self.player)
+        self.playerPtsConfigure(self.player2)
+        self.playerPtsConfigure(self.player3)
+        self.dealerPtsConfigure(self.dealer)
+
+        self.player.betMoney = 0
+        self.player2.betMoney = 0
+        self.player3.betMoney = 0
+
         self.LplayerMoney.configure(text=str(self.playerMoney) + "만원")
-        self.LbetMoney_P1.configure(text='$' + str(self.betMoney))
+        self.LbetMoney_P1.configure(text=str(self.player.betMoney))
+        self.LbetMoney_P2.configure(text=str(self.player2.betMoney))
+        self.LbetMoney_P3.configure(text=str(self.player3.betMoney))
 
+        self.disabledBet()
+        self.disalbedDeal()
+        self.Again['state'] = 'active'
+        self.Again['bg'] = 'white'
+
+    def activeBet(self):
+        self.Bet1_P1['state'] = 'active'
+        self.Bet1_P1['bg'] = 'white'
+        self.Bet5_P1['state'] = 'active'
+        self.Bet5_P1['bg'] = 'white'
+        self.Bet1_P2['state'] = 'active'
+        self.Bet1_P2['bg'] = 'white'
+        self.Bet5_P2['state'] = 'active'
+        self.Bet5_P2['bg'] = 'white'
+        self.Bet1_P3['state'] = 'active'
+        self.Bet1_P3['bg'] = 'white'
+        self.Bet5_P3['state'] = 'active'
+        self.Bet5_P3['bg'] = 'white'
+
+    def disabledBet(self):
         self.Bet5_P1['state'] = 'disabled'
         self.Bet5_P1['bg'] = 'gray'
         self.Bet1_P1['state'] = 'disabled'
         self.Bet1_P1['bg'] = 'gray'
+        self.Bet5_P2['state'] = 'disabled'
+        self.Bet5_P2['bg'] = 'gray'
+        self.Bet1_P2['state'] = 'disabled'
+        self.Bet1_P2['bg'] = 'gray'
+        self.Bet5_P3['state'] = 'disabled'
+        self.Bet5_P3['bg'] = 'gray'
+        self.Bet1_P3['state'] = 'disabled'
+        self.Bet1_P3['bg'] = 'gray'
+
+    def activeDeal(self):
+        self.Deal['state'] = 'active'
+        self.Deal['bg'] = 'white'
+
+    def disalbedDeal(self):
         self.Deal['state'] = 'disabled'
         self.Deal['bg'] = 'gray'
-        self.Again['state'] = 'active'
-        self.Again['bg'] = 'white'
+
+    def playerCardConfigure(self, player):
+        Str = ""
+
+        for i in range(len(player.cards)):
+            Str += str(player.cards[i].getsuit()) + " "
+
+        if player.playernum == 1:
+            self.LplayerCard.configure(text=Str)
+            return
+        if player.playernum == 2:
+            self.Lplayer2Card.configure(text=Str)
+            return
+        if player.playernum == 3:
+            self.Lplayer3Card.configure(text=Str)
+            return
+
+    def dealerCardConfigure(self, dealer):
+        Str = ""
+
+        for i in range(len(dealer.cards)):
+            Str += str(dealer.cards[i].getsuit()) + " "
+
+        self.LdealerCard.configure(text=Str)
+
+    def playerPtsConfigure(self, player):
+        text = ""
+        V = player.value()[0]
+        V2 = player.value()[1][1]
+        text2 = str(player.value()[1][0])
+        if V == 5:
+            text = "38광땡"
+            text2 = ""
+        if V == 4:
+            text = "광땡"
+        if V == 3:
+            text = "땡"
+            text2 = str(player.value()[1][1][1])
+        if V == 2:
+            text = "끗"
+        if V == 1:
+            text = "망통"
+            text2 = ""
+        if V == 0:
+            text = "노메이드"
+            text2 = ""
+        if player.playernum == 1:
+            self.LplayerPts.configure(text=text2 + text + " ")
+            return
+        if player.playernum == 2:
+            self.Lplayer2Pts.configure(text=text2 + text + " ")
+            return
+        if player.playernum == 3:
+            self.Lplayer3Pts.configure(text=text2 + text + " ")
+            return
+
+    def judge(self, player, dealer):
+        if player.value()[0] > dealer.value()[0]:
+            return True
+        elif player.value()[0] == dealer.value()[0]:
+            if player.value()[1][0] > dealer.value()[1][0]:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def dealerPtsConfigure(self, dealer):
+        text = ""
+        V = dealer.value()[0]
+        V2 = dealer.value()[1][1]
+        text2 = str(dealer.value()[1][0])
+        if V == 5:
+            text = "38광땡"
+            text2 = ""
+        if V == 4:
+            text = "광땡"
+        if V == 3:
+            text = "땡"
+            text2 = str(dealer.value()[1][1][1])
+        if V == 2:
+            text = "끗"
+        if V == 1:
+            text = "망통"
+            text2 = ""
+        if V == 0:
+            text = "노메이드"
+            text2 = ""
+        self.LdealerPts.configure(text=text2 + text + " ")
+
+    def sumbetMoney(self):
+        return self.player.betMoney + self.player2.betMoney + self.player3.betMoney
 
 
 BlackJack()
