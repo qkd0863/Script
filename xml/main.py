@@ -39,6 +39,7 @@ class MainGui():
     Book_List = set()
 
     def __init__(self):
+        self.select_sigun = 0
 
         window.title("도서관 정보")
         global mainframe
@@ -48,12 +49,6 @@ class MainGui():
         mainframe.pack()
         infoframe = Frame(window, width=1200, height=800)
         infoframe.pack()
-
-        # header = ["Name", "Addr", "Tel", "Url"]
-
-        # for i, col_name in enumerate(header):
-        #    label = Label(frame, text=col_name, font=("Helvetica", 14, "bold"))
-        #    label.grid(row=0, column=i)
 
         self.Book_List_Data = []
         for item in self.book_root.iter("doc"):
@@ -145,32 +140,39 @@ class MainGui():
         SearchFrame = Frame(mainframe)
         SearchFrame.place(x=0, y=100)
 
-        global SearchListBox
         ListboxScrollbar = Scrollbar(SearchFrame)
         ListboxScrollbar.pack(side='right', fill='y')
 
         TempFont = font.Font(window, size=15, weight='bold', family='Consolas')
-        SearchListBox = Listbox(SearchFrame, font=TempFont, activestyle='none', width=10, height=5, borderwidth=12,
-                                relief='ridge', yscrollcommand=ListboxScrollbar.set)
+        self.SearchListBox = Listbox(SearchFrame, font=TempFont, activestyle='none', width=10, height=5, borderwidth=12,
+                                     relief='ridge', yscrollcommand=ListboxScrollbar.set)
 
         num = 0
 
         sortList = sorted(self.List)
         for i in sortList:
-            SearchListBox.insert(num, i)
+            self.SearchListBox.insert(num, i)
             num += 1
 
-        SearchListBox.pack()
-        ListboxScrollbar.config(command=SearchListBox.yview)
+        self.SearchListBox.pack()
+        ListboxScrollbar.config(command=self.SearchListBox.yview)
 
-        SearchListBox.bind('<ButtonRelease-1>', self.OnListBoxSelect)
+        self.SearchListBox.bind('<ButtonRelease-1>', self.OnListBoxSelect)
 
     def OnListBoxSelect(self, event):
-        selected_indices = SearchListBox.curselection()
+        selected_indices = self.SearchListBox.curselection()
         selected_index = selected_indices[0]
-        SIGUN_NM = SearchListBox.get(selected_index)
+        SIGUN_NM = self.SearchListBox.get(selected_index)
 
+        self.select_sigun = SIGUN_NM
         self.UpdateMap(SIGUN_NM)
+
+    def OnNameBoxSelect(self, event):
+        selected_indices = self.LibraryNameBox.curselection()
+        selected_index = selected_indices[0]
+        Library_Name = self.LibraryNameBox.get(selected_index)
+
+        self.UpdateMap_OneMark(self.select_sigun, Library_Name)
 
     def UpdateMap(self, SIGUN_NM):
         gmaps_api_url = "https://maps.googleapis.com/maps/api/geocode/json"
@@ -178,12 +180,13 @@ class MainGui():
             "address": SIGUN_NM,
             "key": google_key
         }
+        print(params["address"])
 
         response = requests.get(gmaps_api_url, params=params)
         response.raise_for_status()
         center = response.json()["results"][0]["geometry"]["location"]
 
-        seoul_map_url = f"https://maps.googleapis.com/maps/api/staticmap?center={center['lat']},{center['lng']}&zoom=11&size=400x400&maptype=roadmap&key={google_key}"
+        seoul_map_url = f"https://maps.googleapis.com/maps/api/staticmap?center={center['lat']},{center['lng']}&zoom=11&size=1000x1000&maptype=roadmap&key={google_key}"
 
         for library in self.SigunData[SIGUN_NM]:
             lat = library['REFINE_WGS84_LAT']
@@ -202,8 +205,42 @@ class MainGui():
             self.map_label.destroy()
 
         self.map_label = Label(mainframe, image=photo)
-        self.map_label.image = photo  # 이미지가 GC에 의해 수거되지 않도록 참조 유지
-        self.map_label.place(x=600, y=100)  # 적절한 위치에 배치
+        self.map_label.image = photo
+        self.map_label.place(x=500, y=100)
+
+    def UpdateMap_OneMark(self, SIGUN_NM, Library_Name):
+        gmaps_api_url = "https://maps.googleapis.com/maps/api/geocode/json"
+        params = {
+            "address": SIGUN_NM,
+            "key": google_key
+        }
+
+        response = requests.get(gmaps_api_url, params=params)
+        response.raise_for_status()
+        center = response.json()["results"][0]["geometry"]["location"]
+
+        seoul_map_url = f"https://maps.googleapis.com/maps/api/staticmap?center={center['lat']},{center['lng']}&zoom=11&size=1000x1000&maptype=roadmap&key={google_key}"
+
+        for library in self.SigunData[SIGUN_NM]:
+            if Library_Name == library['LIBRRY_NM']:
+                lat = library['REFINE_WGS84_LAT']
+                lng = library['REFINE_WGS84_LOGT']
+                library_name = library['LIBRRY_NM']
+                marker = f"&markers=color:red%7Clabel:{library_name[0]}%7C{lat},{lng}"
+                seoul_map_url += marker
+
+        response = requests.get(seoul_map_url)
+        response.raise_for_status()
+
+        image_data = response.content
+        photo = ImageTk.PhotoImage(data=image_data)
+
+        if hasattr(self, 'map_label'):
+            self.map_label.destroy()
+
+        self.map_label = Label(mainframe, image=photo)
+        self.map_label.image = photo
+        self.map_label.place(x=500, y=100)
 
     def InitSearchButton(self):
         TempFont = font.Font(mainframe, size=12, weight='bold', family='Consolas')
@@ -211,19 +248,19 @@ class MainGui():
         SearchButton.place(x=50, y=50)
 
     def SearchButtonAction(self):
-        selected_indices = SearchListBox.curselection()
+        selected_indices = self.SearchListBox.curselection()
         selected_index = selected_indices[0]
-        SIGUN_NM = SearchListBox.get(selected_index)
+        SIGUN_NM = self.SearchListBox.get(selected_index)
 
         num = 0
-        LibraryNameBox.delete(0, END)
+        self.LibraryNameBox.delete(0, END)
         List = []
 
         for dictlist in self.SigunData[SIGUN_NM]:
             List.append(dictlist["LIBRRY_NM"])
         List.sort()
         for i in List:
-            LibraryNameBox.insert(num, i)
+            self.LibraryNameBox.insert(num, i)
             num += 1
 
     def InitLibraryInformationButton(self):
@@ -237,11 +274,11 @@ class MainGui():
         RenderText.place(x=50, y=100)
 
     def LibraryInformationSearch(self):
-        selected_indices = LibraryNameBox.curselection()
+        selected_indices = self.LibraryNameBox.curselection()
         if not selected_indices:
             return
         selected_index = selected_indices[0]
-        LIBRRY_NM = LibraryNameBox.get(selected_index)
+        LIBRRY_NM = self.LibraryNameBox.get(selected_index)
 
         for sigun, libraries in self.SigunData.items():
             for library in libraries:
@@ -274,17 +311,18 @@ class MainGui():
         LibraryNameFrame = Frame(mainframe)
         LibraryNameFrame.place(x=160, y=100)
 
-        global LibraryNameBox
         ListboxScrollbar = Scrollbar(LibraryNameFrame)
         ListboxScrollbar.pack(side='right', fill='y')
 
         TempFont = font.Font(window, size=15, weight='bold', family='Consolas')
-        LibraryNameBox = Listbox(LibraryNameFrame, font=TempFont, activestyle='none', width=20, height=5,
-                                 borderwidth=12,
-                                 relief='ridge', yscrollcommand=ListboxScrollbar.set)
+        self.LibraryNameBox = Listbox(LibraryNameFrame, font=TempFont, activestyle='none', width=20, height=5,
+                                      borderwidth=12,
+                                      relief='ridge', yscrollcommand=ListboxScrollbar.set)
 
-        LibraryNameBox.pack()
-        ListboxScrollbar.config(command=LibraryNameBox.yview)
+        self.LibraryNameBox.pack()
+        ListboxScrollbar.config(command=self.LibraryNameBox.yview)
+
+        self.LibraryNameBox.bind('<ButtonRelease-1>', self.OnNameBoxSelect)
 
     def InitBookListBox(self):
         BookListFrame = Frame(infoframe)
