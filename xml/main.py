@@ -107,19 +107,8 @@ class MainGui():
         self.InitBookInfoButton()
         self.InitSendMailButton()
         self.InitBookImageLabel()
-        self.IniMap()
-        window.mainloop()
 
-    def IniMap(self):
-        center = gmaps.geocode("성남시")[0]['geometry']['location']
-        seoul_map_url = f"https://maps.googleapis.com/maps/api/staticmap?center={center['lat']},{center['lng']}&zoom=11&size=400x400&maptype=roadmap"
-        canvas = Canvas(mainframe, width=400, height=400)
-        canvas.place(x=300, y=300)
-        response = requests.get(seoul_map_url + '&key=' + google_key)
-        image = Image.open(BytesIO(response.content))
-        photo = ImageTk.PhotoImage(image)
-        map_label = Label(mainframe, image=photo)
-        map_label.pack()
+        window.mainloop()
 
     def openFrame(self, frame):
         mainframe.pack_forget()
@@ -173,6 +162,48 @@ class MainGui():
 
         SearchListBox.pack()
         ListboxScrollbar.config(command=SearchListBox.yview)
+
+        SearchListBox.bind('<ButtonRelease-1>', self.OnListBoxSelect)
+
+    def OnListBoxSelect(self, event):
+        selected_indices = SearchListBox.curselection()
+        selected_index = selected_indices[0]
+        SIGUN_NM = SearchListBox.get(selected_index)
+
+        self.UpdateMap(SIGUN_NM)
+
+    def UpdateMap(self, SIGUN_NM):
+        gmaps_api_url = "https://maps.googleapis.com/maps/api/geocode/json"
+        params = {
+            "address": SIGUN_NM,
+            "key": google_key
+        }
+
+        response = requests.get(gmaps_api_url, params=params)
+        response.raise_for_status()
+        center = response.json()["results"][0]["geometry"]["location"]
+
+        seoul_map_url = f"https://maps.googleapis.com/maps/api/staticmap?center={center['lat']},{center['lng']}&zoom=11&size=400x400&maptype=roadmap&key={google_key}"
+
+        for library in self.SigunData[SIGUN_NM]:
+            lat = library['REFINE_WGS84_LAT']
+            lng = library['REFINE_WGS84_LOGT']
+            library_name = library['LIBRRY_NM']
+            marker = f"&markers=color:red%7Clabel:{library_name[0]}%7C{lat},{lng}"
+            seoul_map_url += marker
+
+        response = requests.get(seoul_map_url)
+        response.raise_for_status()
+
+        image_data = response.content
+        photo = ImageTk.PhotoImage(data=image_data)
+
+        if hasattr(self, 'map_label'):
+            self.map_label.destroy()
+
+        self.map_label = Label(mainframe, image=photo)
+        self.map_label.image = photo  # 이미지가 GC에 의해 수거되지 않도록 참조 유지
+        self.map_label.place(x=600, y=100)  # 적절한 위치에 배치
 
     def InitSearchButton(self):
         TempFont = font.Font(mainframe, size=12, weight='bold', family='Consolas')
