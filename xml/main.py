@@ -12,18 +12,13 @@ from PIL import Image, ImageTk
 from collections import defaultdict
 from tkinter import *
 from tkinter import font
-
-# host = "smtp.gmail.com"
-# port = "587"
+from googlemaps import Client
 
 senderAddr = "qkd7183@gmail.com"
 recipientAddr = "qkd7183@naver.com"
 
-# msg=MIMEBase("multipart","alternative")
-
-
-# HtmlPart=MIMEText(htmlF)
-
+google_key = "AIzaSyBAAAqcV4L-qDCewx1tmO91hfb77NWen1I"
+gmaps = Client(key=google_key)
 
 window = Tk()
 window.geometry("1200x800+200+200")
@@ -43,8 +38,6 @@ class MainGui():
     List = set()
     Book_List = set()
 
-
-
     def __init__(self):
 
         window.title("도서관 정보")
@@ -61,9 +54,6 @@ class MainGui():
         # for i, col_name in enumerate(header):
         #    label = Label(frame, text=col_name, font=("Helvetica", 14, "bold"))
         #    label.grid(row=0, column=i)
-
-
-
 
         self.Book_List_Data = []
         for item in self.book_root.iter("doc"):
@@ -117,7 +107,19 @@ class MainGui():
         self.InitBookInfoButton()
         self.InitSendMailButton()
         self.InitBookImageLabel()
+        self.IniMap()
         window.mainloop()
+
+    def IniMap(self):
+        center = gmaps.geocode("성남시")[0]['geometry']['location']
+        seoul_map_url = f"https://maps.googleapis.com/maps/api/staticmap?center={center['lat']},{center['lng']}&zoom=11&size=400x400&maptype=roadmap"
+        canvas = Canvas(mainframe, width=400, height=400)
+        canvas.place(x=300, y=300)
+        response = requests.get(seoul_map_url + '&key=' + google_key)
+        image = Image.open(BytesIO(response.content))
+        photo = ImageTk.PhotoImage(image)
+        map_label = Label(mainframe, image=photo)
+        map_label.pack()
 
     def openFrame(self, frame):
         mainframe.pack_forget()
@@ -298,7 +300,6 @@ class MainGui():
                 if (i[4] != ""):
                     BookInfoLenderText.insert(INSERT, "권\n")
 
-
                 url = i[5]
 
                 if hasattr(self, 'book_image_label'):
@@ -313,9 +314,6 @@ class MainGui():
                 self.book_image_label.place(x=800, y=470)
 
         RenderText.configure(state='disabled')
-
-
-
 
     def InitBookInfoLenderText(self):
         global BookInfoLenderText
