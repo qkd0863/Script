@@ -1,10 +1,11 @@
-import urllib
+import certifi
 import urllib.request
 from io import BytesIO
 import requests
 import xml.etree.ElementTree as ET
 import smtplib
 import tkinter.messagebox as msgbox
+import telepot
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PIL import Image, ImageTk
@@ -15,13 +16,15 @@ from tkinter import font
 from googlemaps import Client
 
 senderAddr = "qkd7183@gmail.com"
-recipientAddr = "qkd7183@naver.com"
 
 google_key = "AIzaSyBAAAqcV4L-qDCewx1tmO91hfb77NWen1I"
 gmaps = Client(key=google_key)
 
 window = Tk()
 window.geometry("1200x800+200+200")
+
+width = 800
+height = 600
 
 
 class MainGui():
@@ -77,6 +80,8 @@ class MainGui():
             READROOM_REST_DE_INFO = item.findtext("READROOM_REST_DE_INFO")
             REFINE_WGS84_LAT = item.findtext("REFINE_WGS84_LAT")
             REFINE_WGS84_LOGT = item.findtext("REFINE_WGS84_LOGT")
+            DMSTC_BOOK_DATA_CNT = item.findtext("DMSTC_BOOK_DATA_CNT")
+            FRN_BOOK_DATA_CNT = item.findtext("FRN_BOOK_DATA_CNT")
             self.SigunData[SIGUN_NM].append({
                 "LOCPLC_ADDR": LOCPLC_ADDR,
                 "TELNO": TELNO,
@@ -87,7 +92,9 @@ class MainGui():
                 "RECSROOM_REST_DE_INFO": RECSROOM_REST_DE_INFO,
                 "READROOM_REST_DE_INFO": READROOM_REST_DE_INFO,
                 "REFINE_WGS84_LAT": REFINE_WGS84_LAT,
-                "REFINE_WGS84_LOGT": REFINE_WGS84_LOGT
+                "REFINE_WGS84_LOGT": REFINE_WGS84_LOGT,
+                "DMSTC_BOOK_DATA_CNT": DMSTC_BOOK_DATA_CNT,
+                "FRN_BOOK_DATA_CNT": FRN_BOOK_DATA_CNT
             })
 
         self.InitBackButton()
@@ -102,6 +109,8 @@ class MainGui():
         self.InitBookInfoButton()
         self.InitSendMailButton()
         self.InitBookImageLabel()
+        self.InitTeleButton()
+        self.InitGraphButton()
 
         window.mainloop()
 
@@ -241,6 +250,132 @@ class MainGui():
         self.map_label = Label(mainframe, image=photo)
         self.map_label.image = photo
         self.map_label.place(x=500, y=100)
+
+    def InitTeleButton(self):
+        TempFont = font.Font(mainframe, size=12, weight='bold', family='Consolas')
+        TeleButton = Button(mainframe, font=TempFont, text="텔레그램 봇", command=self.TeleButtonAction)
+        TeleButton.place(x=50, y=700)
+
+    def TeleButtonAction(self):
+        pass
+
+    def InitGraphButton(self):
+        TempFont = font.Font(mainframe, size=12, weight='bold', family='Consolas')
+        GraphButton = Button(mainframe, font=TempFont, text="그래프 출력", command=self.GraphButtonAction)
+        GraphButton.place(x=200, y=700)
+
+    def GraphButtonAction(self):
+        self.WriteGraphWindow()
+
+    def WriteGraphWindow(self):
+        global GraphWindow
+        GraphWindow = Toplevel()
+        GraphWindow.geometry("1200x800+200+200")
+        GraphWindow.title("국내도서 자료수")
+
+        # Create a frame to hold the canvas and scrollbar
+        frame = Frame(GraphWindow)
+        frame.pack(fill=BOTH, expand=True)
+
+        # Create the canvas
+        self.canvas = Canvas(frame, width=1200, height=400, bg='white')
+        self.canvas.grid(row=0, column=0, sticky="nsew")
+
+        # Create the scrollbar
+        self.scrollbar_x = Scrollbar(frame, orient=HORIZONTAL, command=self.canvas.xview)
+        self.scrollbar_x.grid(row=1, column=0, sticky="ew")
+
+        # Configure the canvas to work with the scrollbar
+        self.canvas.configure(xscrollcommand=self.scrollbar_x.set)
+
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_columnconfigure(0, weight=1)
+
+        Domestic_button = Button(GraphWindow, text="국내도서", font=("Helvetica", 12), command=self.Domestic_button_Action)
+        Domestic_button.pack(pady=30)
+
+        Oversea_button = Button(GraphWindow, text="국외도서", font=("Helvetica", 12), command=self.Domestic_button_Action)
+        Oversea_button.pack(pady=30)
+
+        SearchFrame = Frame(GraphWindow)
+        SearchFrame.place(x=0, y=615)
+
+        ListboxScrollbar = Scrollbar(SearchFrame)
+        ListboxScrollbar.pack(side='right', fill='y')
+
+        TempFont = font.Font(window, size=15, weight='bold', family='Consolas')
+        self.GraphListBox = Listbox(SearchFrame, font=TempFont, activestyle='none', width=10, height=5, borderwidth=12,
+                                    relief='ridge', yscrollcommand=ListboxScrollbar.set)
+
+        num = 0
+
+        sortList = sorted(self.List)
+        for i in sortList:
+            self.GraphListBox.insert(num, i)
+            num += 1
+
+        self.GraphListBox.pack()
+        ListboxScrollbar.config(command=self.GraphListBox.yview)
+
+        self.GraphListBox.bind('<ButtonRelease-1>', self.OnGraphBoxSelect)
+        self.BookNumList = []
+
+    def OnGraphBoxSelect(self, event):
+        selected_indices = self.GraphListBox.curselection()
+        selected_index = selected_indices[0]
+        SIGUN_NM = self.GraphListBox.get(selected_index)
+
+        self.BookNumList = []
+
+        for data in self.SigunData[SIGUN_NM]:
+            dmstc_book_count = int(data["DMSTC_BOOK_DATA_CNT"]) if data["DMSTC_BOOK_DATA_CNT"].strip() else 0
+            frn_book_count = int(data["FRN_BOOK_DATA_CNT"]) if data["FRN_BOOK_DATA_CNT"].strip() else 0
+            self.BookNumList.append((data["LIBRRY_NM"], dmstc_book_count, frn_book_count))
+
+    def Domestic_button_Action(self):
+        barWidth = 50
+        barGap = 100
+
+        sorted_domestic = sorted(self.BookNumList, key=lambda x: x[1])
+        sorted_oversea = sorted(self.BookNumList, key=lambda x: x[2])
+
+        print(sorted_domestic)
+
+        max_bar_height = 500
+
+        self.canvas.delete("histogram")
+        self.draw_bars(sorted_domestic, barWidth, barGap, max_bar_height, 'blue', 'book_count', start_x=50)
+
+        self.draw_bars(sorted_oversea, barWidth, barGap, max_bar_height, 'red', 'book_count2',
+                       start_x=50 + (barWidth + barGap) * len(sorted_domestic) + barGap)
+
+    def draw_bars(self, sorted_data, barWidth, barGap, max_bar_height, color, text_tag, start_x):
+
+        num_bars = len(sorted_data)
+        if num_bars > 0:
+            bar_height = max_bar_height / num_bars
+
+            for i, (library_name, book_count, book_count2) in enumerate(sorted_data):
+
+                rank = i + 1
+                x1 = start_x + (barWidth + barGap) * i
+                y1 = 600 - rank * bar_height
+                x2 = x1 + barWidth
+                y2 = 600
+
+
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags='histogram')
+
+
+                if text_tag == 'book_count':
+                    text_value = str(book_count)
+                elif text_tag == 'book_count2':
+                    text_value = str(book_count2)
+
+                self.canvas.create_text((x1 + x2) / 2, y1 - 10, text=text_value, anchor='s', tags='histogram')
+                self.canvas.create_text((x1 + x2) / 2, y2 + 10, text=library_name, anchor='n', tags='histogram')
+
+        self.canvas.config(scrollregion=self.canvas.bbox(ALL))
 
     def InitSearchButton(self):
         TempFont = font.Font(mainframe, size=12, weight='bold', family='Consolas')

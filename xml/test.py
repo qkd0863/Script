@@ -1,13 +1,21 @@
-from PIL import Image
-from io import BytesIO
+import telepot
 import requests
+import certifi
 
-# 테스트용 이미지 URL
-url = 'https://www.example.com/path/to/image.jpg'
-response = requests.get(url)
+# 신뢰할 수 있는 인증서 번들 사용
+token = "7204520635:AAHr0LSnYCcvw70SowiNTUF_55fV7UBH464"
+chat_id = "7431693311"
+message = "Hello from my bot!"
 
-if response.status_code == 200:
-    image = Image.open(BytesIO(response.content))
-    image.show()
-else:
-    print("Failed to retrieve the image")
+
+url = f"https://api.telegram.org/bot{token}/sendMessage"
+
+
+# 요청 보내기
+response = requests.post(url, data={
+    'chat_id': chat_id,
+    'text': message
+}, verify=certifi.where())
+
+# 응답 출력
+print(response.json())
