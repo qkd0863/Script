@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 import smtplib
 import tkinter.messagebox as msgbox
 import telepot
+import spam
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PIL import Image, ImageTk
@@ -363,9 +364,7 @@ class MainGui():
                 x2 = x1 + barWidth
                 y2 = 600
 
-
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags='histogram')
-
 
                 if text_tag == 'book_count':
                     text_value = str(book_count)
