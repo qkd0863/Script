@@ -12,11 +12,23 @@ import re
 from datetime import date, datetime, timedelta
 import traceback
 
-key = 'f1e7e93ee1351c8e15709881906543fb843305921a8d66a87f30050077959fcb'
+#key = 'f1e7e93ee1351c8e15709881906543fb843305921a8d66a87f30050077959fcb'
+key = 'sea100UMmw23Xycs33F1EQnumONR%2F9ElxBLzkilU9Yr1oT4TrCot8Y2p0jyuJP72x9rG9D8CN5yuEs6AS2sAiw%3D%3D'
+
 TOKEN = '7204520635:AAHr0LSnYCcvw70SowiNTUF_55fV7UBH464'
+#TOKEN = '485724929:AAFyGBLSbCtevvcXxa3jBLU22nf8wCgTLcQ'
+
 MAX_MSG_LENGTH = 300
-baseurl = 'http://data4library.kr/api/loanItemSrch'+key
+
+#baseurl = 'http://data4library.kr/api/loanItemSrch'+key
+baseurl = 'http://openapi.molit.go.kr:8081/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcRHTrade?ServiceKey='+key
+response = urlopen(baseurl).read().decode('utf-8')
+print(response)
+
+
 bot = telepot.Bot(TOKEN)
+
+#bot.sendMessage('7431693311','안녕하세요 김영식교수님 2023 스크립트언어 시간입니다.')
 
 def getData(loc_param, date_param):
     res_list = []
@@ -30,7 +42,7 @@ def getData(loc_param, date_param):
         item = re.sub('<.*?>', '|', item.text)
         parsed = item.split('|')
         try:
-            row = parsed[3]+'/'+parsed[6]+'/'+parsed[7]+', '+parsed[4]+' '+parsed[5]+', '+parsed[8]+'m², '+parsed[11]+'F, '+parsed[1].strip()+'만원\n'
+            row = parsed[6]+', '+parsed[14]+' '+parsed[9]+' '+parsed[10]+' '+parsed[5]+'동, '+parsed[13]+'m², '+parsed[17]+'F, '+parsed[1].strip()+'만원\n'
         except IndexError:
             row = item.replace('|', ',')
 
@@ -82,6 +94,6 @@ if __name__=='__main__':
 
     print( '[',today,']received token :', TOKEN )
 
-    pprint( bot.getMe() )
+    print( bot.getMe() )
 
     run(current_month)

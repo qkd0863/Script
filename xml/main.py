@@ -1,3 +1,5 @@
+import time
+
 import certifi
 import urllib.request
 from io import BytesIO
@@ -6,7 +8,11 @@ import xml.etree.ElementTree as ET
 import smtplib
 import tkinter.messagebox as msgbox
 import telepot
-import spam
+import noti
+
+from datetime import date, datetime, timedelta
+
+#import spam
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PIL import Image, ImageTk
@@ -15,6 +21,8 @@ from collections import defaultdict
 from tkinter import *
 from tkinter import font
 from googlemaps import Client
+
+from teller import handle
 
 senderAddr = "qkd7183@gmail.com"
 
@@ -258,7 +266,20 @@ class MainGui():
         TeleButton.place(x=50, y=700)
 
     def TeleButtonAction(self):
-        pass
+        self.MakeTeleWindow()
+    def MakeTeleWindow(self):
+        global GraphWindow
+        GraphWindow = Toplevel()
+        GraphWindow.geometry("600x600+200+200")
+        GraphWindow.title("텔레그램 봇")
+
+        today = date.today()
+        current_month = today.strftime('%Y%m')
+        print('[', today, ']received token :', noti.TOKEN)
+        bot = telepot.Bot(noti.TOKEN)
+        print(bot.getMe())
+        bot.message_loop(handle)
+        print('Listening...')
 
     def InitGraphButton(self):
         TempFont = font.Font(mainframe, size=12, weight='bold', family='Consolas')
