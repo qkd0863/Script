@@ -8,11 +8,13 @@ import xml.etree.ElementTree as ET
 import smtplib
 import tkinter.messagebox as msgbox
 import telepot
+import urllib3
+
 import noti
 
 from datetime import date, datetime, timedelta
 
-#import spam
+# import spam
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PIL import Image, ImageTk
@@ -34,6 +36,8 @@ window.geometry("1200x800+200+200")
 
 width = 800
 height = 600
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class MainGui():
@@ -267,6 +271,7 @@ class MainGui():
 
     def TeleButtonAction(self):
         self.MakeTeleWindow()
+
     def MakeTeleWindow(self):
         global GraphWindow
         GraphWindow = Toplevel()
@@ -293,7 +298,7 @@ class MainGui():
         global GraphWindow
         GraphWindow = Toplevel()
         GraphWindow.geometry("1200x800+200+200")
-        GraphWindow.title("국내도서 자료수")
+        GraphWindow.title("도서 자료수(파랑:국내도서, 빨강:국외도서)")
 
         # Create a frame to hold the canvas and scrollbar
         frame = Frame(GraphWindow)
@@ -313,10 +318,10 @@ class MainGui():
         frame.grid_rowconfigure(0, weight=1)
         frame.grid_columnconfigure(0, weight=1)
 
-        Domestic_button = Button(GraphWindow, text="국내도서", font=("Helvetica", 12), command=self.Domestic_button_Action)
+        Domestic_button = Button(GraphWindow, text="도서수량 출력", font=("Helvetica", 12), command=self.Domestic_button_Action)
         Domestic_button.pack(pady=30)
 
-        Oversea_button = Button(GraphWindow, text="국외도서", font=("Helvetica", 12), command=self.Domestic_button_Action)
+        Oversea_button = Button(GraphWindow, text="창 닫기", font=("Helvetica", 12), command=self.GraphWindowClose)
         Oversea_button.pack(pady=30)
 
         SearchFrame = Frame(GraphWindow)
@@ -354,6 +359,13 @@ class MainGui():
             frn_book_count = int(data["FRN_BOOK_DATA_CNT"]) if data["FRN_BOOK_DATA_CNT"].strip() else 0
             self.BookNumList.append((data["LIBRRY_NM"], dmstc_book_count, frn_book_count))
 
+    def GraphWindowClose(self):
+        # 새 창이 열려 있다면 닫기
+        global GraphWindow
+        if GraphWindow is not None:
+            GraphWindow.destroy()
+            GraphWindow = None
+
     def Domestic_button_Action(self):
         barWidth = 50
         barGap = 100
@@ -361,17 +373,19 @@ class MainGui():
         sorted_domestic = sorted(self.BookNumList, key=lambda x: x[1])
         sorted_oversea = sorted(self.BookNumList, key=lambda x: x[2])
 
-        print(sorted_domestic)
+        domestic_max = max(sorted_domestic, key=lambda x: x[1])
+        oversea_max = max(sorted_domestic, key=lambda x: x[2])
 
         max_bar_height = 500
 
         self.canvas.delete("histogram")
-        self.draw_bars(sorted_domestic, barWidth, barGap, max_bar_height, 'blue', 'book_count', start_x=50)
+        self.draw_bars(sorted_domestic, barWidth, barGap, max_bar_height, 'blue', 'book_count', domestic_max[1],
+                       start_x=50)
 
         self.draw_bars(sorted_oversea, barWidth, barGap, max_bar_height, 'red', 'book_count2',
-                       start_x=50 + (barWidth + barGap) * len(sorted_domestic) + barGap)
+                       oversea_max[2], start_x=50 + (barWidth + barGap) * len(sorted_domestic) + barGap)
 
-    def draw_bars(self, sorted_data, barWidth, barGap, max_bar_height, color, text_tag, start_x):
+    def draw_bars(self, sorted_data, barWidth, barGap, max_bar_height, color, text_tag, maxbook, start_x):
 
         num_bars = len(sorted_data)
         if num_bars > 0:
@@ -379,9 +393,12 @@ class MainGui():
 
             for i, (library_name, book_count, book_count2) in enumerate(sorted_data):
 
-                rank = i + 1
                 x1 = start_x + (barWidth + barGap) * i
-                y1 = 600 - rank * bar_height
+                if text_tag == 'book_count':
+                    y1 = 600 - 500 / maxbook * book_count
+                elif text_tag == 'book_count2':
+                    y1 = 600 - 500 / maxbook * book_count2
+
                 x2 = x1 + barWidth
                 y2 = 600
 

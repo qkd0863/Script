@@ -28,7 +28,6 @@ print(response)
 
 bot = telepot.Bot(TOKEN)
 
-#bot.sendMessage('7431693311','안녕하세요 김영식교수님 2023 스크립트언어 시간입니다.')
 
 def getData(loc_param, date_param):
     res_list = []
