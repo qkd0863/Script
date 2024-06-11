@@ -14,7 +14,7 @@ import noti
 
 from datetime import date, datetime, timedelta
 
-# import spam
+import spam
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PIL import Image, ImageTk
@@ -286,11 +286,11 @@ class MainGui():
 
         today = date.today()
         current_month = today.strftime('%Y%m')
-        #print('[', today, ']received token :', noti.TOKEN)
+        # print('[', today, ']received token :', noti.TOKEN)
         self.bot = telepot.Bot(noti.TOKEN)
-        #print(bot.getMe())
+        # print(bot.getMe())
         self.bot.message_loop(handle)
-        #print('Listening...')
+        # print('Listening...')
 
     def send_message(self):
         message = self.message_entry.get()
@@ -337,7 +337,8 @@ class MainGui():
         frame.grid_rowconfigure(0, weight=1)
         frame.grid_columnconfigure(0, weight=1)
 
-        Domestic_button = Button(GraphWindow, text="도서수량 출력", font=("Helvetica", 12), command=self.Domestic_button_Action)
+        Domestic_button = Button(GraphWindow, text="도서수량 출력", font=("Helvetica", 12),
+                                 command=self.Domestic_button_Action)
         Domestic_button.pack(pady=30)
 
         Oversea_button = Button(GraphWindow, text="창 닫기", font=("Helvetica", 12), command=self.GraphWindowClose)
@@ -412,13 +413,13 @@ class MainGui():
 
             for i, (library_name, book_count, book_count2) in enumerate(sorted_data):
 
-                x1 = start_x + (barWidth + barGap) * i
+                x1 = spam.add(start_x, spam.multiplication(spam.add(barWidth, barGap), i))
                 if text_tag == 'book_count':
                     y1 = 600 - 500 / maxbook * book_count
                 elif text_tag == 'book_count2':
                     y1 = 600 - 500 / maxbook * book_count2
 
-                x2 = x1 + barWidth
+                x2 = spam.add(x1, -barWidth)
                 y2 = 600
 
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, tags='histogram')
@@ -428,8 +429,8 @@ class MainGui():
                 elif text_tag == 'book_count2':
                     text_value = str(book_count2)
 
-                self.canvas.create_text((x1 + x2) / 2, y1 - 10, text=text_value, anchor='s', tags='histogram')
-                self.canvas.create_text((x1 + x2) / 2, y2 + 10, text=library_name, anchor='n', tags='histogram')
+                self.canvas.create_text((spam.add(x1,x2)) / 2, y1 - 10, text=text_value, anchor='s', tags='histogram')
+                self.canvas.create_text((spam.add(x1,x2)) / 2, y2 + 10, text=library_name, anchor='n', tags='histogram')
 
         self.canvas.config(scrollregion=self.canvas.bbox(ALL))
 
