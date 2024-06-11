@@ -1,98 +1,107 @@
-#!/usr/bin/python
-# coding=utf-8
-
 import sys
 import time
 import sqlite3
+import os
+import logging
+import requests
+import xml.etree.ElementTree as ET
+from urllib.parse import quote
+from datetime import date, datetime
 import telepot
-from pprint import pprint
-from urllib.request import urlopen
-from bs4 import BeautifulSoup
-import re
-from datetime import date, datetime, timedelta
-import traceback
 
-#key = 'f1e7e93ee1351c8e15709881906543fb843305921a8d66a87f30050077959fcb'
-key = 'sea100UMmw23Xycs33F1EQnumONR%2F9ElxBLzkilU9Yr1oT4TrCot8Y2p0jyuJP72x9rG9D8CN5yuEs6AS2sAiw%3D%3D'
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
+# Ensure API key and token are obtained from environment variables
+API_KEY = os.getenv('API_KEY', '94c80014751c43c3aff04a8290cda503')
 TOKEN = '7204520635:AAHr0LSnYCcvw70SowiNTUF_55fV7UBH464'
-#TOKEN = '485724929:AAFyGBLSbCtevvcXxa3jBLU22nf8wCgTLcQ'
-
 MAX_MSG_LENGTH = 300
-
-#baseurl = 'http://data4library.kr/api/loanItemSrch'+key
-baseurl = 'http://openapi.molit.go.kr:8081/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcRHTrade?ServiceKey='+key
-response = urlopen(baseurl).read().decode('utf-8')
-print(response)
-
+BASE_URL = 'https://openapi.gg.go.kr/TBGGIBLLBR'
 
 bot = telepot.Bot(TOKEN)
 
-
-def getData(loc_param, date_param):
+def get_data(loc_param):
     res_list = []
-    url = baseurl+'&LAWD_CD='+loc_param+'&DEAL_YMD='+date_param
-    #print(url)
-    res_body = urlopen(url).read()
-    #print(res_body)
-    soup = BeautifulSoup(res_body, 'html.parser')
-    items = soup.findAll('item')
-    for item in items:
-        item = re.sub('<.*?>', '|', item.text)
-        parsed = item.split('|')
-        try:
-            row = parsed[6]+', '+parsed[14]+' '+parsed[9]+' '+parsed[10]+' '+parsed[5]+'동, '+parsed[13]+'m², '+parsed[17]+'F, '+parsed[1].strip()+'만원\n'
-        except IndexError:
-            row = item.replace('|', ',')
+    queryParams = {'KEY': API_KEY, 'Type': 'xml', 'SIGUN_NM': loc_param, 'pIndex': '1', 'pSize': '1000'}
+    response = requests.get(BASE_URL, params=queryParams)
 
-        if row:
-            res_list.append(row.strip())
+    if response.status_code != 200:
+        logging.error(f"Error fetching data from URL: {response.status_code}")
+        return res_list
+
+    root = ET.fromstring(response.text)
+    items = root.findall('.//row')
+
+    for item in items:
+        try:
+            sigun_nm = item.findtext("SIGUN_NM")
+            if sigun_nm != loc_param:
+                continue
+            data = {
+                "SIGUN_NM": item.findtext("SIGUN_NM"),
+                "LOCPLC_ADDR": item.findtext("LOCPLC_ADDR"),
+                "TELNO": item.findtext("TELNO"),
+                "HMPG_ADDR": item.findtext("HMPG_ADDR"),
+                "LIBRRY_NM": item.findtext("LIBRRY_NM"),
+                "RECSROOM_OPEN_TM_INFO": item.findtext("RECSROOM_OPEN_TM_INFO"),
+                "READROOM_OPEN_TM_INFO": item.findtext("READROOM_OPEN_TM_INFO"),
+                "RECSROOM_REST_DE_INFO": item.findtext("RECSROOM_REST_DE_INFO"),
+                "READROOM_REST_DE_INFO": item.findtext("READROOM_REST_DE_INFO"),
+                "REFINE_WGS84_LAT": item.findtext("REFINE_WGS84_LAT"),
+                "REFINE_WGS84_LOGT": item.findtext("REFINE_WGS84_LOGT"),
+                "DMSTC_BOOK_DATA_CNT": item.findtext("DMSTC_BOOK_DATA_CNT"),
+                "FRN_BOOK_DATA_CNT": item.findtext("FRN_BOOK_DATA_CNT")
+            }
+            row = ",".join(data.values())
+            res_list.append(row)
+        except Exception as e:
+            logging.error(f"Error parsing item: {e}")
+            continue
     return res_list
 
-def sendMessage(user, msg):
+def send_message(user, msg):
     try:
         bot.sendMessage(user, msg)
     except:
-        traceback.print_exc(file=sys.stdout)
+        logging.error("Error sending message", exc_info=True)
 
 def run(date_param, param='11710'):
     conn = sqlite3.connect('logs.db')
     cursor = conn.cursor()
-    cursor.execute('CREATE TABLE IF NOT EXISTS logs( user TEXT, log TEXT, PRIMARY KEY(user, log) )')
+    cursor.execute('CREATE TABLE IF NOT EXISTS logs(user TEXT, log TEXT, PRIMARY KEY(user, log))')
     conn.commit()
 
     user_cursor = sqlite3.connect('users.db').cursor()
-    user_cursor.execute('CREATE TABLE IF NOT EXISTS users( user TEXT, location TEXT, PRIMARY KEY(user, location) )')
+    user_cursor.execute('CREATE TABLE IF NOT EXISTS users(user TEXT, location TEXT, PRIMARY KEY(user, location))')
     user_cursor.execute('SELECT * from users')
 
     for data in user_cursor.fetchall():
-        user, param = data[0], data[1]
-        print(user, date_param, param)
-        res_list = getData( param, date_param )
+        user, param = data
+        logging.info(f"Processing user: {user}, location: {param}")
+        res_list = get_data(param)
         msg = ''
+
         for r in res_list:
             try:
-                cursor.execute('INSERT INTO logs (user,log) VALUES ("%s", "%s")'%(user,r))
+                cursor.execute('INSERT INTO logs(user, log) VALUES (?, ?)', (user, r))
             except sqlite3.IntegrityError:
-                # 이미 해당 데이터가 있다는 것을 의미합니다.
-                pass
+                continue
             else:
-                print( str(datetime.now()).split('.')[0], r )
-                if len(r+msg)+1>MAX_MSG_LENGTH:
-                    sendMessage( user, msg )
-                    msg = r+'\n'
+                logging.info(f"New log entry: {r}")
+                if len(r + msg) + 1 > MAX_MSG_LENGTH:
+                    send_message(user, msg)
+                    msg = r + '\n'
                 else:
-                    msg += r+'\n'
+                    msg += r + '\n'
         if msg:
-            sendMessage( user, msg )
+            send_message(user, msg)
     conn.commit()
 
-if __name__=='__main__':
+if __name__ == '__main__':
     today = date.today()
-    current_month = today.strftime('%Y%m')
+    logging.info(f"[{today}] received token: {TOKEN}")
 
-    print( '[',today,']received token :', TOKEN )
+    bot = telepot.Bot(TOKEN)
+    logging.info(bot.getMe())
 
-    print( bot.getMe() )
-
-    run(current_month)
+    run(date.today().strftime('%Y%m'))

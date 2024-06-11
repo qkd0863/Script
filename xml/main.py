@@ -275,16 +275,35 @@ class MainGui():
     def MakeTeleWindow(self):
         global GraphWindow
         GraphWindow = Toplevel()
-        GraphWindow.geometry("600x600+200+200")
-        GraphWindow.title("텔레그램 봇")
+        GraphWindow.geometry("300x100+100+100")
+        GraphWindow.title("텔레그램 봇 작동중")
+
+        self.message_entry = Entry(GraphWindow, width=50)
+        self.message_entry.pack(pady=20)
+
+        self.send_button = Button(GraphWindow, text="Send Message", command=self.send_message)
+        self.send_button.pack(pady=10)
 
         today = date.today()
         current_month = today.strftime('%Y%m')
-        print('[', today, ']received token :', noti.TOKEN)
-        bot = telepot.Bot(noti.TOKEN)
-        print(bot.getMe())
-        bot.message_loop(handle)
-        print('Listening...')
+        #print('[', today, ']received token :', noti.TOKEN)
+        self.bot = telepot.Bot(noti.TOKEN)
+        #print(bot.getMe())
+        self.bot.message_loop(handle)
+        #print('Listening...')
+
+    def send_message(self):
+        message = self.message_entry.get()
+        if message:
+            msg = {
+                'message_id': 1234,
+                'from': {'id': '7431693311', 'is_bot': False, 'first_name': 'User', 'username': 'user'},
+                'chat': {'id': '7431693311', 'first_name': 'User', 'username': 'user', 'type': 'private'},
+                'date': int(time.time()),
+                'text': message
+            }
+            handle(msg)
+            print(f"Sent message: {message}")
 
     def InitGraphButton(self):
         TempFont = font.Font(mainframe, size=12, weight='bold', family='Consolas')
